@@ -1,0 +1,35 @@
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: otpbank_db
+    environment:
+      POSTGRES_DB: otpbank
+      POSTGRES_USER: otpbank
+      POSTGRES_PASSWORD: otpbank
+    ports:
+      - "5432:5432"
+    volumes:
+      - otpbank_pgdata:/var/lib/postgresql/data
+      - ./otpbank-backend/db/init:/docker-entrypoint-initdb.d:ro
+
+  backend:
+    build:
+      context: ./otpbank-backend
+      dockerfile: Dockerfile
+    container_name: otpbank_backend
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      DATABASE_URL: postgresql://otpbank:otpbank@db:5432/otpbank
+      JWT_SECRET: dev_secret_change_me
+    depends_on:
+      - db
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./otpbank-backend:/app
+      - /app/node_modules
+    command: npm run dev
+
+volumes:
+  otpbank_pgdata:
