@@ -1,16 +1,30 @@
-# otpbank
+# OTPbank — Flutter app
 
-A new Flutter project.
+Мобильное приложение (Flutter) для проекта OTPbank.
 
-## Getting Started
+## Запуск
 
-This project is a starting point for a Flutter application.
+```bash
+flutter pub get
+flutter run
+```
 
-A few resources to get you started if this is your first Flutter project:
+## Конфигурация
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+`baseUrl` для backend задаётся в:
+- `lib/core/config/app_config.dart`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## Авторизация (OTP)
+
+Flow:
+- Splash → Phone → Code → (Registration, если новый пользователь) → RootShell
+
+## Аватары
+
+Предустановленные аватары:
+- `assets/avatars/avatar1.png`
+- `assets/avatars/avatar2.png`
+- `assets/avatars/avatar3.png`
+- `assets/avatars/avatar4.png`
+
+Можно выбрать и из галереи (локально на устройстве).
