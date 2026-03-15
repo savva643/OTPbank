@@ -12,7 +12,8 @@ import '../../../core/widgets/otp_webp_image.dart';
 import '../../../core/config/app_config.dart';
 import '../../accounts/presentation/account_details_screen.dart';
 import '../../bonuses/presentation/bonuses_screen.dart';
-import '../../notifications/presentation/notifications_screen.dart';
+import '../../payments/presentation/nfc_payment_screen.dart';
+import '../../payments/presentation/qr_payment_screen.dart';
 import '../../payments/presentation/sbp_transfer_screen.dart';
 import '../../search/presentation/search_screen.dart';
 import '../../products/bloc/products_bloc.dart';
@@ -20,6 +21,7 @@ import '../../products/domain/product_ui_config.dart';
 import '../../products/presentation/product_details_screen.dart';
 import '../../products/widgets/otp_product_tile.dart';
 import '../../shell/presentation/root_shell.dart';
+import '../../notifications/presentation/notifications_screen.dart';
 import '../bloc/home_bloc.dart';
 import '../../profile/presentation/profile_screen.dart';
 import '../../stories/presentation/story_screen.dart';
@@ -72,35 +74,48 @@ class _HomeTabContentState extends State<HomeTabContent> {
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              OtpAvatarButton(
-                radius: 21,
-                onTap: () {
-                  Navigator.of(context).push(
-                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
-                  );
-                },
-                imageUrl: state.avatarUrl,
-                initials: userName.isNotEmpty ? userName.substring(0, 1) : 'U',
-              ),
-              const SizedBox(width: 8),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    Image.asset(
-                      'assets/img/logo.png',
-                      height: 16,
-                      color: Colors.black,
-                      fit: BoxFit.contain,
+                    Hero(
+                      tag: 'splash_avatar',
+                      child: OtpAvatarButton(
+                        radius: 21,
+                        onTap: () {
+                          Navigator.of(context).push(
+                            MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                          );
+                        },
+                        imageUrl: state.avatarUrl,
+                        initials: userName.isNotEmpty ? userName.substring(0, 1) : 'U',
+                      ),
                     ),
-                    Text(
-                      userName.isNotEmpty ? '$greeting, $userName' : greeting,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF0F172A),
-                          ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Hero(
+                        tag: 'splash_title',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Image.asset(
+                              'assets/img/logo.png',
+                              height: 16,
+                              color: Colors.black,
+                              fit: BoxFit.contain,
+                            ),
+                            Text(
+                              userName.isNotEmpty ? '$greeting, $userName' : greeting,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    fontWeight: FontWeight.w700,
+                                    color: const Color(0xFF0F172A),
+                                  ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -700,6 +715,98 @@ class _QuickActionsRow extends StatefulWidget {
 }
 
 class _QuickActionsRowState extends State<_QuickActionsRow> {
+  Future<void> _openInviteSheet() async {
+    await showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.white,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFE2E8F0),
+                      borderRadius: BorderRadius.circular(9999),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  'Пригласить друга',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    height: 1.25,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                const Text(
+                  'Поделитесь вашей дебетовой картой — и получите до 3000 ₽ за приглашения.',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                    height: 1.35,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                _InviteActionTile(
+                  title: 'Поделиться дебетовой картой',
+                  subtitle: 'Отправьте ссылку другу в мессенджере',
+                  icon: Icons.send_rounded,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(height: 10),
+                _InviteActionTile(
+                  title: 'Порекомендовать приложение',
+                  subtitle: 'Поделиться OTP Peek в соцсетях',
+                  icon: Icons.ios_share_rounded,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(height: 10),
+                _InviteActionTile(
+                  title: 'Как получить 3000 ₽',
+                  subtitle: 'Условия и правила акции',
+                  icon: Icons.local_offer_rounded,
+                  onTap: () => Navigator.of(context).pop(),
+                ),
+                const SizedBox(height: 16),
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF0F172A),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                      textStyle: const TextStyle(fontWeight: FontWeight.w800),
+                    ),
+                    child: const Text('Поделиться сейчас'),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Row(
@@ -709,7 +816,13 @@ class _QuickActionsRowState extends State<_QuickActionsRow> {
             label: 'Оплатить',
             icon: Icons.payments_rounded,
             style: OtpRoundActionStyle.primary,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const NfcPaymentScreen(),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: 8),
@@ -718,7 +831,13 @@ class _QuickActionsRowState extends State<_QuickActionsRow> {
             label: 'QR',
             icon: Icons.qr_code_rounded,
             style: OtpRoundActionStyle.secondary,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const QrPaymentScreen(),
+                ),
+              );
+            },
           ),
         ),
         const SizedBox(width: 8),
@@ -748,10 +867,83 @@ class _QuickActionsRowState extends State<_QuickActionsRow> {
             label: 'Пригласить',
             icon: Icons.person_add_alt_1_rounded,
             style: OtpRoundActionStyle.purple,
-            onTap: () {},
+            onTap: _openInviteSheet,
           ),
         ),
       ],
+    );
+  }
+}
+
+class _InviteActionTile extends StatelessWidget {
+  const _InviteActionTile({
+    required this.title,
+    required this.subtitle,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String title;
+  final String subtitle;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xFFF8FAFC),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(9999),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                ),
+                child: Icon(icon, color: const Color(0xFF0F172A), size: 20),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w800,
+                        height: 1.25,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      subtitle,
+                      style: const TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8), size: 22),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

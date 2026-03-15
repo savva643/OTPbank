@@ -45,6 +45,10 @@
 	<true/>
 	<key>NSContactsUsageDescription</key>
 	<string>Нужно для выбора получателя из контактов</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Нужно для оплаты по QR (сканирование кода)</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Нужно для выбора QR-кода из галереи</string>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
 </dict>

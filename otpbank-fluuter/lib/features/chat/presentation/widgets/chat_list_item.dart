@@ -29,7 +29,7 @@ class ChatListItem extends StatelessWidget {
             left: isHighlighted
                 ? const BorderSide(
                     width: 4,
-                    color: Color(0xFFC1FF05),
+                    color: Color(0xFFC4FF2E),
                   )
                 : BorderSide.none,
           ),
@@ -57,7 +57,7 @@ class ChatListItem extends StatelessWidget {
                       style: TextStyle(
                         color: chat.isSupport
                             ? const Color(0xFF3B82F6)
-                            : const Color(0xFF1E293B),
+                            : const Color(0xFF64748B),
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
                         height: 1.33,
@@ -105,11 +105,11 @@ class ChatListItem extends StatelessWidget {
             height: 48,
             decoration: BoxDecoration(
               color: chat.isSupport
-                  ? const Color(0xFFC1FF05)
+                  ? const Color(0x33C4FF2E)
                   : const Color(0xFFE2E8F0),
               shape: BoxShape.circle,
               border: Border.all(
-                color: const Color(0xFFF1F5F9),
+                color: chat.isSupport ? const Color(0x4CC4FF2E) : const Color(0xFFF1F5F9),
                 width: 1,
               ),
               image: chat.avatarUrl != null
@@ -137,7 +137,7 @@ class ChatListItem extends StatelessWidget {
                 width: 14,
                 height: 14,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFC1FF05),
+                  color: const Color(0xFFC4FF2E),
                   shape: BoxShape.circle,
                   border: Border.all(
                     color: Colors.white,
@@ -145,7 +145,7 @@ class ChatListItem extends StatelessWidget {
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFFC1FF05).withOpacity(0.5),
+                      color: const Color(0xFFC4FF2E).withOpacity(0.5),
                       blurRadius: 4,
                       spreadRadius: 0,
                     ),
@@ -176,28 +176,54 @@ class ChatListItem extends StatelessWidget {
         ),
         if (chat.tag != null) ...[
           const SizedBox(width: 8),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: chat.tag == 'СРОЧНО'
-                  ? const Color(0xFF1E293B)
-                  : const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Text(
-              chat.tag!,
-              style: TextStyle(
-                color: chat.tag == 'СРОЧНО'
-                    ? const Color(0xFFC1FF05)
-                    : const Color(0xFF64748B),
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                height: 1.50,
-              ),
-            ),
-          ),
+          _buildTagChip(chat.tag!),
         ],
       ],
+    );
+  }
+
+  Widget _buildTagChip(String tag) {
+    final upper = tag.toUpperCase();
+
+    Color borderColor;
+    Color backgroundColor;
+    Color textColor;
+
+    switch (upper) {
+      case 'СРОЧНО':
+        borderColor = const Color(0x4CFF7D32);
+        backgroundColor = const Color(0x0CFF7D32);
+        textColor = const Color(0xFFFF7D32);
+        break;
+      case 'РЕШЕНО':
+        borderColor = const Color(0x4C9E6FC3);
+        backgroundColor = const Color(0x0C9E6FC3);
+        textColor = const Color(0xFF9E6FC3);
+        break;
+      default:
+        borderColor = const Color(0xFFE2E8F0);
+        backgroundColor = const Color(0xFFF8FAFC);
+        textColor = const Color(0xFF64748B);
+        break;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: backgroundColor,
+        borderRadius: BorderRadius.circular(9999),
+        border: Border.all(color: borderColor, width: 1),
+      ),
+      child: Text(
+        upper,
+        style: TextStyle(
+          color: textColor,
+          fontSize: 10,
+          fontWeight: FontWeight.w700,
+          height: 1.50,
+          letterSpacing: 0.30,
+        ),
+      ),
     );
   }
 

@@ -2,6 +2,7 @@ import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/network/api_client.dart';
+import '../../../core/storage/greeting_cache_storage.dart';
 
 part 'home_event.dart';
 part 'home_state.dart';
@@ -355,6 +356,20 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
     emit(state.copyWith(status: HomeStatus.loading));
 
     try {
+      final cached = await GreetingCacheStorage().getCached();
+      if (cached.userName != null || cached.avatarUrl != null) {
+        emit(
+          state.copyWith(
+            userName: cached.userName ?? state.userName,
+            avatarUrl: cached.avatarUrl ?? state.avatarUrl,
+          ),
+        );
+      }
+    } catch (_) {
+      // ignore cache errors
+    }
+
+    try {
       final profileRes = await _apiClient.dio.get('/user/profile');
       final cardsRes = await _apiClient.dio.get('/cards');
       final accountsRes = await _apiClient.dio.get('/accounts');
@@ -381,6 +396,21 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final normalizedFullName = (fullName ?? '').trim();
       final normalizedName = (name ?? '').trim();
       final normalizedAvatar = (avatarUrl ?? '').trim();
+
+      final resolvedUserName = normalizedFirstName.isNotEmpty
+          ? normalizedFirstName
+          : (normalizedFullName.isNotEmpty
+              ? normalizedFullName
+              : (normalizedName.isNotEmpty ? normalizedName : 'Пользователь'));
+
+      try {
+        await GreetingCacheStorage().setCached(
+          userName: resolvedUserName,
+          avatarUrl: normalizedAvatar.isNotEmpty ? normalizedAvatar : null,
+        );
+      } catch (_) {
+        // ignore cache errors
+      }
 
       // Парсим карты
       final cards = <HomeCardItem>[];
@@ -522,11 +552,7 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       emit(
         state.copyWith(
           status: HomeStatus.ready,
-          userName: normalizedFirstName.isNotEmpty
-              ? normalizedFirstName
-              : (normalizedFullName.isNotEmpty
-                  ? normalizedFullName
-                  : (normalizedName.isNotEmpty ? normalizedName : 'Пользователь')),
+          userName: resolvedUserName,
           avatarUrl: normalizedAvatar.isNotEmpty ? normalizedAvatar : null,
           accounts: accounts,
           cards: cards,

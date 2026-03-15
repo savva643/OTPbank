@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/widgets/otp_primary_button.dart';
+import '../../../core/storage/pin_code_storage.dart';
 import '../bloc/auth_bloc.dart';
 import 'avatar_picker_screen.dart';
-import '../../shell/presentation/root_shell.dart';
+import 'pin_code_screen.dart';
+import '../../splash/presentation/splash_greeting_screen.dart';
 
 class RegistrationScreen extends StatefulWidget {
   const RegistrationScreen({super.key});
@@ -94,10 +96,33 @@ class _RegistrationScreenState extends State<RegistrationScreen> {
       listenWhen: (prev, next) => prev.status != next.status,
       listener: (context, state) {
         if (state.status == AuthStatus.authorized) {
-          Navigator.of(context).pushAndRemoveUntil(
-            _fadeSlideRoute(const RootShell()),
-            (_) => false,
-          );
+          Future<void>(() async {
+            final nav = Navigator.of(context);
+            final storedPin = await PinCodeStorage().getPin();
+            if (!mounted) return;
+
+            final mode = storedPin == null ? PinCodeMode.create : PinCodeMode.enter;
+            Navigator.of(context).pushAndRemoveUntil(
+              _fadeSlideRoute(
+                PinCodeScreen(
+                  mode: mode,
+                  onSuccess: () {
+                    nav.pushReplacement(
+                      PageRouteBuilder<void>(
+                        transitionDuration: const Duration(milliseconds: 320),
+                        reverseTransitionDuration: const Duration(milliseconds: 320),
+                        pageBuilder: (_, a, __) => FadeTransition(
+                          opacity: a,
+                          child: const SplashGreetingScreen(),
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ),
+              (_) => false,
+            );
+          });
         }
       },
       child: Builder(

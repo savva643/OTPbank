@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/storage/auth_token_storage.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
+import '../../auth/bloc/auth_bloc.dart';
+import '../../splash/presentation/splash_screen.dart';
 import '../../home/bloc/home_bloc.dart';
 import '../../settings/presentation/settings_screen.dart';
 import '../../auth/presentation/avatar_picker_screen.dart';
@@ -90,22 +93,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _logout() async {
-    try {
-      await _api.dio.post('/auth/logout');
-      if (mounted) {
-        // Clear stored tokens and navigate to login
-        // TODO: Implement proper navigation to login screen
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Выход выполнен')),
-        );
-      }
-    } catch (e) {
-      print('Error logging out: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ошибка при выходе')),
-        );
-      }
+    await AuthTokenStorage().clear();
+    if (mounted) {
+      context.read<AuthBloc>().add(const AuthLoggedOut());
+      Navigator.of(context).pushAndRemoveUntil(
+        MaterialPageRoute<void>(builder: (_) => const SplashScreen()),
+        (route) => false,
+      );
     }
   }
 

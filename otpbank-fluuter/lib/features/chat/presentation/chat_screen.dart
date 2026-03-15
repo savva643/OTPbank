@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
 
-import '../../../core/theme/otp_colors.dart';
 import '../bloc/chat_bloc.dart';
 
 class ChatScreen extends StatefulWidget {
@@ -28,7 +27,11 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     super.initState();
-    context.read<ChatBloc>().add(const ChatStarted());
+    context.read<ChatBloc>().add(ChatStarted(
+          chatId: widget.chatId,
+          chatName: widget.chatName,
+          isSupport: widget.isSupport,
+        ));
   }
 
   @override
@@ -105,6 +108,8 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   PreferredSizeWidget _buildAppBar() {
+    final title = (widget.chatName ?? (widget.isSupport ? 'Чат с поддержкой' : 'Чат')).trim();
+
     return AppBar(
       backgroundColor: Colors.white,
       elevation: 0,
@@ -120,35 +125,54 @@ class _ChatScreenState extends State<ChatScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: OtpColors.purpleAccent,
-              borderRadius: BorderRadius.circular(12),
+              color: const Color(0x33C4FF2E),
+              shape: BoxShape.circle,
+              border: Border.all(color: const Color(0x4CC4FF2E), width: 1),
             ),
-            child: const Icon(
-              Icons.support_agent_rounded,
-              color: Colors.white,
-              size: 22,
+            child: Icon(
+              widget.isSupport ? Icons.support_agent_rounded : Icons.chat_bubble_rounded,
+              color: const Color(0xFF0F172A),
+              size: 20,
             ),
           ),
           const SizedBox(width: 12),
-          const Column(
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Поддержка',
-                style: TextStyle(
+                title,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
                   color: Color(0xFF0F172A),
-                  fontSize: 16,
+                  fontSize: 18,
                   fontWeight: FontWeight.w700,
+                  height: 1.25,
                 ),
               ),
-              Text(
-                'Онлайн',
-                style: TextStyle(
-                  color: Color(0xFF16A34A),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC4FF2E),
+                      borderRadius: BorderRadius.circular(9999),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  const Text(
+                    'Операторы онлайн',
+                    style: TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w400,
+                      height: 1.33,
+                    ),
+                  ),
+                ],
+              )
             ],
           ),
         ],
@@ -161,6 +185,10 @@ class _ChatScreenState extends State<ChatScreen> {
           },
         ),
       ],
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(height: 1, color: const Color(0xFFF1F5F9)),
+      ),
     );
   }
 
@@ -230,17 +258,19 @@ class _ChatScreenState extends State<ChatScreen> {
       padding: const EdgeInsets.symmetric(vertical: 16),
       child: Center(
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFFE2E8F0),
-            borderRadius: BorderRadius.circular(12),
+            color: const Color(0xFFF1F5F9),
+            borderRadius: BorderRadius.circular(9999),
           ),
           child: Text(
-            dateText,
+            dateText.toUpperCase(),
             style: const TextStyle(
-              color: Color(0xFF64748B),
+              color: Color(0xFF94A3B8),
               fontSize: 12,
               fontWeight: FontWeight.w600,
+              height: 1.33,
+              letterSpacing: 0.60,
             ),
           ),
         ),
@@ -250,6 +280,7 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildMessageBubble(ChatMessage message) {
     final isUser = message.sender == 'user';
+    final timeText = message.timestamp != null ? DateFormat('HH:mm').format(message.timestamp!) : '';
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
@@ -262,76 +293,82 @@ class _ChatScreenState extends State<ChatScreen> {
               width: 32,
               height: 32,
               decoration: BoxDecoration(
-                color: OtpColors.purpleAccent,
-                borderRadius: BorderRadius.circular(10),
+                color: const Color(0x33C4FF2E),
+                shape: BoxShape.circle,
+                border: Border.all(color: const Color(0x4CC4FF2E), width: 1),
               ),
               child: const Icon(
                 Icons.support_agent_rounded,
-                color: Colors.white,
+                color: Color(0xFF0F172A),
                 size: 18,
               ),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isUser ? const Color(0xFFC4FF2E) : Colors.white,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isUser ? 16 : 4),
-                  bottomRight: Radius.circular(isUser ? 4 : 16),
+            child: Column(
+              crossAxisAlignment: isUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              children: [
+                Padding(
+                  padding: EdgeInsets.only(
+                    left: isUser ? 0 : 4,
+                    right: isUser ? 4 : 0,
+                    bottom: 4,
+                  ),
+                  child: Text(
+                    isUser ? 'Вы' : 'Поддержка OTP',
+                    style: const TextStyle(
+                      color: Color(0xFF64748B),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                      height: 1.33,
+                    ),
+                  ),
                 ),
-                boxShadow: isUser
-                    ? null
-                    : [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: isUser ? const Color(0xFFC4FF2E) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isUser ? 16 : 4),
+                      bottomRight: Radius.circular(isUser ? 4 : 16),
+                    ),
+                    boxShadow: isUser
+                        ? const [
+                            BoxShadow(
+                              color: Color(0x0C000000),
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                              spreadRadius: 0,
+                            )
+                          ]
+                        : null,
+                  ),
+                  child: Text(
                     message.text,
                     style: TextStyle(
                       color: const Color(0xFF0F172A),
                       fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      height: 1.4,
+                      fontWeight: isUser ? FontWeight.w500 : FontWeight.w400,
+                      height: 1.43,
                     ),
                   ),
+                ),
+                if (isUser && timeText.isNotEmpty) ...[
                   const SizedBox(height: 4),
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        message.timestamp != null
-                            ? DateFormat('HH:mm').format(message.timestamp!)
-                            : '',
-                        style: TextStyle(
-                          color: const Color(0xFF64748B),
-                          fontSize: 11,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                      if (isUser) ...[
-                        const SizedBox(width: 4),
-                        Icon(
-                          message.isRead ? Icons.done_all_rounded : Icons.done_rounded,
-                          size: 14,
-                          color: message.isRead ? const Color(0xFF16A34A) : const Color(0xFF64748B),
-                        ),
-                      ],
-                    ],
+                  Text(
+                    '$timeText • ${message.isRead ? 'Прочитано' : 'Отправлено'}',
+                    style: const TextStyle(
+                      color: Color(0xFF94A3B8),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w400,
+                      height: 1.50,
+                    ),
                   ),
                 ],
-              ),
+              ],
             ),
           ),
         ],
@@ -341,37 +378,55 @@ class _ChatScreenState extends State<ChatScreen> {
 
   Widget _buildQuickActions() {
     final actions = [
-      'Блокировка карты',
-      'Лимиты',
-      'Комиссии',
-      'Другое',
+      'Проблема с картой',
+      'Вопрос по платежу',
+      'Оформить кредит',
+      'Связаться с оператором',
     ];
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.all(16),
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        border: Border(
+          top: BorderSide(width: 1, color: Color(0xFFF1F5F9)),
+        ),
+      ),
       child: SingleChildScrollView(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
         child: Row(
           children: actions.map((action) {
+            final isPrimary = action == 'Вопрос по платежу';
+            final isOrange = action == 'Оформить кредит';
+
             return Padding(
               padding: const EdgeInsets.only(right: 8),
               child: InkWell(
                 onTap: () => _sendQuickAction(action),
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(9999),
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFE2E8F0)),
+                    color: isPrimary
+                        ? const Color(0x0C9E6FC3)
+                        : (isOrange ? const Color(0x0CFF7D32) : Colors.transparent),
+                    borderRadius: BorderRadius.circular(9999),
+                    border: Border.all(
+                      color: isPrimary
+                          ? const Color(0x4C9E6FC3)
+                          : (isOrange ? const Color(0x4CFF7D32) : const Color(0xFFE2E8F0)),
+                      width: 1,
+                    ),
                   ),
                   child: Text(
                     action,
-                    style: const TextStyle(
-                      color: Color(0xFF0F172A),
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
+                    style: TextStyle(
+                      color: isPrimary
+                          ? const Color(0xFF9E6FC3)
+                          : (isOrange ? const Color(0xFFFF7D32) : const Color(0xFF0F172A)),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w600,
+                      height: 1.33,
                     ),
                   ),
                 ),
@@ -387,59 +442,54 @@ class _ChatScreenState extends State<ChatScreen> {
     return SafeArea(
       top: false,
       child: Container(
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
           border: Border(
-            top: BorderSide(color: const Color(0xFFE2E8F0)),
+            top: BorderSide(color: const Color(0xFFF1F5F9)),
           ),
         ),
         child: Row(
           children: [
-            IconButton(
-              onPressed: () {
-                // TODO: Show attachment options
-              },
-              icon: const Icon(
-                Icons.add_circle_outline_rounded,
-                color: Color(0xFF64748B),
-              ),
-            ),
             Expanded(
               child: Container(
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF1F5F9),
-                  borderRadius: BorderRadius.circular(24),
+                  color: const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
                 ),
                 child: TextField(
                   controller: _controller,
                   decoration: const InputDecoration(
                     hintText: 'Сообщение...',
                     hintStyle: TextStyle(
-                      color: Color(0xFF94A3B8),
-                      fontSize: 15,
+                      color: Color(0xFF6B7280),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w400,
                     ),
                     border: InputBorder.none,
-                    contentPadding: EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    contentPadding: EdgeInsets.only(left: 12, right: 12, top: 9, bottom: 10),
+                    prefixIcon: Icon(Icons.add_rounded, color: Color(0xFF64748B), size: 20),
                   ),
                   onSubmitted: (_) => _send(),
                 ),
               ),
             ),
             const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _send,
-              child: Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFC4FF2E),
-                  borderRadius: BorderRadius.circular(22),
-                ),
-                child: const Icon(
-                  Icons.send_rounded,
-                  color: Color(0xFF0F172A),
-                  size: 22,
+            Material(
+              color: const Color(0xFFC4FF2E),
+              shape: const CircleBorder(),
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: _send,
+                child: const SizedBox(
+                  width: 36,
+                  height: 36,
+                  child: Icon(
+                    Icons.send_rounded,
+                    color: Color(0xFF0F172A),
+                    size: 18,
+                  ),
                 ),
               ),
             ),

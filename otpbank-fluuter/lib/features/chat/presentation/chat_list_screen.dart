@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/widgets/otp_search_input.dart';
 import '../../../features/chat/bloc/chat_list_bloc.dart';
+import '../../../features/chat/bloc/chat_bloc.dart';
 import '../../../features/chat/presentation/widgets/chat_list_item.dart';
 import '../../../features/chat/presentation/chat_screen.dart';
 
@@ -40,7 +41,7 @@ class _ChatListScreenState extends State<ChatListScreen> {
     return BlocProvider.value(
       value: _bloc,
       child: Scaffold(
-        backgroundColor: const Color(0xFFF8FAFC),
+        backgroundColor: Colors.white,
         body: Column(
           children: [
             // Dark header with title and search
@@ -48,6 +49,8 @@ class _ChatListScreenState extends State<ChatListScreen> {
 
             // Filter tabs
             _buildFilterTabs(),
+
+            _buildHeaderDivider(),
 
             // Chat list
             Expanded(
@@ -123,6 +126,14 @@ class _ChatListScreenState extends State<ChatListScreen> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderDivider() {
+    return const Divider(
+      height: 1,
+      thickness: 1,
+      color: Color(0xFFF1F5F9),
     );
   }
 
@@ -284,10 +295,13 @@ class _ChatListScreenState extends State<ChatListScreen> {
     Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (_) => ChatScreen(
-          chatId: chat.id,
-          chatName: chat.name,
-          isSupport: chat.isSupport,
+        builder: (_) => BlocProvider(
+          create: (_) => ChatBloc(),
+          child: ChatScreen(
+            chatId: chat.id,
+            chatName: chat.name,
+            isSupport: chat.isSupport,
+          ),
         ),
       ),
     );

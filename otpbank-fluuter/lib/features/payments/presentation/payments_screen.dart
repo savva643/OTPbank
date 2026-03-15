@@ -5,6 +5,7 @@ import 'payment_by_contract_screen.dart';
 import 'payment_by_card_screen.dart';
 import 'category_services_screen.dart';
 import 'payments_search_screen.dart';
+import 'qr_payment_screen.dart';
 import '../../../core/widgets/otp_search_input.dart';
 import '../../../core/widgets/otp_square_action_button.dart';
 import 'sbp_transfer_screen.dart';
@@ -286,7 +287,13 @@ class _QuickTransferMethodsRow extends StatelessWidget {
           child: OtpSquareActionButton(
             label: 'Оплата\nпо QR',
             icon: Icons.qr_code_rounded,
-            onTap: () {},
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const QrPaymentScreen(),
+                ),
+              );
+            },
           ),
         ),
       ],

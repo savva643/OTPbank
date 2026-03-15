@@ -8,5 +8,6 @@ authRoutes.post('/login', authController.login);
 authRoutes.post('/otp/request', authController.otpRequest);
 authRoutes.post('/otp/verify', authController.otpVerify);
 authRoutes.post('/complete-registration', authController.completeRegistration);
+authRoutes.post('/logout', authController.logout);
 
 module.exports = { authRoutes };

@@ -685,7 +685,7 @@ class _PropertyDetails extends StatelessWidget {
                           ),
                         ),
                       ],
-                    ), 
+                    ),
                   ),
               ],
             ),

@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../../../core/theme/otp_colors.dart';
 import '../../../core/storage/auth_token_storage.dart';
+import '../../../core/storage/pin_code_storage.dart';
 import '../../auth/presentation/phone_auth_screen.dart';
-import '../../shell/presentation/root_shell.dart';
+import '../../auth/presentation/pin_code_screen.dart';
+import 'splash_greeting_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -29,13 +31,46 @@ class _SplashScreenState extends State<SplashScreen> {
       final token = await AuthTokenStorage().getAccessToken();
       if (!mounted) return;
 
-      final next = token != null ? const RootShell() : const PhoneAuthScreen();
+      if (token == null) {
+        Navigator.of(context).pushReplacement(
+          PageRouteBuilder<void>(
+            transitionDuration: const Duration(milliseconds: 380),
+            reverseTransitionDuration: const Duration(milliseconds: 380),
+            pageBuilder: (context, animation, secondaryAnimation) => const PhoneAuthScreen(),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) {
+              return FadeTransition(opacity: animation, child: child);
+            },
+          ),
+        );
+        return;
+      }
+
+      final storedPin = await PinCodeStorage().getPin();
+      if (!mounted) return;
+
+      final mode = storedPin == null ? PinCodeMode.create : PinCodeMode.enter;
+
+      final nav = Navigator.of(context);
 
       Navigator.of(context).pushReplacement(
         PageRouteBuilder<void>(
           transitionDuration: const Duration(milliseconds: 380),
           reverseTransitionDuration: const Duration(milliseconds: 380),
-          pageBuilder: (context, animation, secondaryAnimation) => next,
+          pageBuilder: (context, animation, secondaryAnimation) => PinCodeScreen(
+            mode: mode,
+            onSuccess: () {
+              nav.pushReplacement(
+                PageRouteBuilder<void>(
+                  transitionDuration: const Duration(milliseconds: 320),
+                  reverseTransitionDuration: const Duration(milliseconds: 320),
+                  pageBuilder: (_, a, __) => FadeTransition(
+                    opacity: a,
+                    child: const SplashGreetingScreen(),
+                  ),
+                ),
+              );
+            },
+          ),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return FadeTransition(opacity: animation, child: child);
           },
