@@ -3,13 +3,14 @@ import 'package:flutter/material.dart';
 import '../../../core/widgets/otp_search_input.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
 import '../domain/product_ui_config.dart';
+import '../bloc/products_bloc.dart';
 import '../widgets/otp_product_tile.dart';
 import 'product_details_screen.dart';
 
 class ProductsSearchScreen extends StatefulWidget {
   const ProductsSearchScreen({super.key, required this.items});
 
-  final List<String> items;
+  final List<ProductSearchItem> items;
 
   @override
   State<ProductsSearchScreen> createState() => _ProductsSearchScreenState();
@@ -36,7 +37,7 @@ class _ProductsSearchScreenState extends State<ProductsSearchScreen> {
     final q = _query.trim().toLowerCase();
     final filtered = q.isEmpty
         ? widget.items
-        : widget.items.where((e) => e.toLowerCase().contains(q)).toList();
+        : widget.items.where((e) => e.title.toLowerCase().contains(q)).toList();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -68,7 +69,8 @@ class _ProductsSearchScreenState extends State<ProductsSearchScreen> {
               ),
               itemCount: filtered.length,
               itemBuilder: (context, index) {
-                final cfg = ProductUiConfig.byTitle(filtered[index]);
+                final item = filtered[index];
+                final cfg = ProductUiConfig.byTitle(item.title);
                 return OtpProductTile(
                   product: cfg,
                   size: OtpProductTileSize.mediumWide,
@@ -77,7 +79,8 @@ class _ProductsSearchScreenState extends State<ProductsSearchScreen> {
                     Navigator.of(context).push(
                       MaterialPageRoute<void>(
                         builder: (_) => ProductDetailsScreen(
-                          data: ProductDetailsMock.byTitle(cfg.title),
+                          productId: item.id,
+                          titleFallback: cfg.title,
                         ),
                       ),
                     );

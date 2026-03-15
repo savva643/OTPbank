@@ -5,6 +5,10 @@ const userService = {
   getProfile: async (userId) => {
     const { rows } = await pool.query(
       `SELECT id, name, phone, email, avatar_url
+             , full_name
+             , first_name
+             , last_name
+             , middle_name
        FROM users
        WHERE id = $1
        LIMIT 1`,
@@ -17,6 +21,10 @@ const userService = {
     return {
       id: user.id,
       name: user.name,
+      fullName: user.full_name,
+      firstName: user.first_name,
+      lastName: user.last_name,
+      middleName: user.middle_name,
       phone: user.phone,
       email: user.email,
       avatarUrl: user.avatar_url

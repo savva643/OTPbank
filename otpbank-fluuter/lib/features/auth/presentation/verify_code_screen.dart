@@ -16,6 +16,23 @@ class VerifyCodeScreen extends StatefulWidget {
 class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
   final _codeCtrl = TextEditingController();
 
+  PageRoute<void> _fadeSlideRoute(Widget child) {
+    return PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 320),
+      reverseTransitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (context, animation, secondaryAnimation) => child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+        final slide = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
+            .chain(CurveTween(curve: Curves.easeOut));
+        return FadeTransition(
+          opacity: fade,
+          child: SlideTransition(position: fade.drive(slide), child: child),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _codeCtrl.dispose();
@@ -28,14 +45,12 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
       listenWhen: (prev, next) => prev.status != next.status,
       listener: (context, state) {
         if (state.status == AuthStatus.needsRegistration) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute<void>(builder: (_) => const RegistrationScreen()),
-          );
+          Navigator.of(context).pushReplacement(_fadeSlideRoute(const RegistrationScreen()));
         }
 
         if (state.status == AuthStatus.authorized) {
           Navigator.of(context).pushAndRemoveUntil(
-            MaterialPageRoute<void>(builder: (_) => const RootShell()),
+            _fadeSlideRoute(const RootShell()),
             (_) => false,
           );
         }

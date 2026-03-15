@@ -17,6 +17,8 @@ services:
       context: ./otpbank-backend
       dockerfile: Dockerfile
     container_name: otpbank_backend
+    env_file:
+      - ./otpbank-backend/.env
     environment:
       NODE_ENV: development
       PORT: 3000

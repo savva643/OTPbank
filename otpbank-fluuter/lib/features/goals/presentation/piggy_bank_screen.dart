@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../core/network/api_client.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
 
 class PiggyBankScreen extends StatefulWidget {
@@ -10,32 +11,61 @@ class PiggyBankScreen extends StatefulWidget {
 }
 
 class _PiggyBankScreenState extends State<PiggyBankScreen> {
-  final List<_PiggyGoal> _goals = [
-    _PiggyGoal(
-      id: '1',
-      name: 'На отпуск',
-      iconId: 'beach',
-      targetAmount: 120000,
-      savedAmount: 42000,
-      currency: 'RUB',
-    ),
-    _PiggyGoal(
-      id: '2',
-      name: 'Новый телефон',
-      iconId: 'phone',
-      targetAmount: 90000,
-      savedAmount: 18000,
-      currency: 'RUB',
-    ),
-    _PiggyGoal(
-      id: '3',
-      name: 'Инвесткопилка',
-      iconId: 'invest',
-      targetAmount: 5000,
-      savedAmount: 2750,
-      currency: 'USD',
-    ),
-  ];
+  final _api = ApiClient();
+  bool _loading = true;
+  List<_PiggyGoal> _goals = const [];
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  void _toast(String text) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  Future<void> _load() async {
+    setState(() => _loading = true);
+    try {
+      final res = await _api.dio.get('/goals');
+      final data = res.data;
+      final list = <_PiggyGoal>[];
+      if (data is Map && data['items'] is List) {
+        for (final g in (data['items'] as List)) {
+          if (g is! Map) continue;
+          list.add(_PiggyGoal.fromJson(g));
+        }
+      }
+
+      if (!mounted) return;
+      setState(() => _goals = list);
+    } catch (_) {
+      if (!mounted) return;
+      _toast('Не удалось загрузить цели');
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  int get _goalsCount => _goals.length;
+
+  int get _totalSavedRub {
+    var sum = 0;
+    for (final g in _goals) {
+      if (g.currency.toUpperCase() == 'RUB') sum += g.savedAmount;
+    }
+    return sum;
+  }
 
   void _openCreateGoal() {
     showModalBottomSheet<void>(
@@ -44,11 +74,7 @@ class _PiggyBankScreenState extends State<PiggyBankScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return _CreateGoalSheet(
-          onCreate: (goal) {
-            setState(() {
-              _goals.insert(0, goal);
-            });
-          },
+          onCreated: () => _load(),
         );
       },
     );
@@ -60,82 +86,145 @@ class _PiggyBankScreenState extends State<PiggyBankScreen> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          ListView(
-            padding: EdgeInsets.zero,
-            children: [
-              const SizedBox(height: 8),
-              const OtpUniversalAppBar(title: 'Копилка'),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 110),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text(
-                          'Мои цели',
-                          style: TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            height: 1.25,
-                            letterSpacing: -0.6,
-                          ),
+          RefreshIndicator(
+            color: const Color(0xFF9E6FC3),
+            onRefresh: _load,
+            child: ListView(
+              padding: EdgeInsets.zero,
+              children: [
+                const SizedBox(height: 8),
+                const OtpUniversalAppBar(title: 'Копилка'),
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: double.infinity,
+                        padding: const EdgeInsets.all(24),
+                        decoration: ShapeDecoration(
+                          color: const Color(0xFFC4FF2E),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(48)),
+                          shadows: const [
+                            BoxShadow(
+                              color: Color(0x0C000000),
+                              blurRadius: 2,
+                              offset: Offset(0, 1),
+                              spreadRadius: 0,
+                            )
+                          ],
                         ),
-                        Material(
-                          color: const Color(0x19C1FF05),
-                          borderRadius: BorderRadius.circular(9999),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(9999),
-                            onTap: _openCreateGoal,
-                            child: const Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              child: Row(
-                                children: [
-                                  Icon(Icons.add_rounded, size: 18, color: Color(0xFF0F172A)),
-                                  SizedBox(width: 6),
-                                  Text(
-                                    'Создать',
-                                    style: TextStyle(
-                                      color: Color(0xFF0F172A),
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w800,
-                                      height: 1.3,
-                                    ),
-                                  ),
-                                ],
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const Opacity(
+                              opacity: 0.80,
+                              child: Text(
+                                'Всего накоплено',
+                                style: TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.3,
+                                ),
                               ),
                             ),
-                          ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    '${_totalSavedRub.toString()} ₽',
+                                    style: const TextStyle(
+                                      color: Color(0xFF0F172A),
+                                      fontSize: 30,
+                                      fontWeight: FontWeight.w900,
+                                      height: 1.2,
+                                    ),
+                                  ),
+                                ),
+                                if (_loading)
+                                  const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Color(0xFF0F172A),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                              decoration: ShapeDecoration(
+                                color: Colors.white.withOpacity(0.30),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(9999)),
+                              ),
+                              child: Text(
+                                '$_goalsCount ЦЕЛЕЙ',
+                                style: const TextStyle(
+                                  color: Color(0xFF0F172A),
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w800,
+                                  height: 1.3,
+                                  letterSpacing: 0.6,
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Копилка — это цели и накопления. Накопительный счёт — банковский счёт с процентами.',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                height: 1.35,
+                              ),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    for (final g in _goals) ...[
-                      _GoalCard(
-                        goal: g,
-                        onAdd: () {
-                          setState(() {
-                            g.savedAmount += (g.currency == 'RUB' ? 2500 : 25);
-                            if (g.savedAmount > g.targetAmount) g.savedAmount = g.targetAmount;
-                          });
-                        },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'Мои цели',
+                            style: TextStyle(
+                              color: Color(0xFF0F172A),
+                              fontSize: 22,
+                              fontWeight: FontWeight.w800,
+                              height: 1.25,
+                              letterSpacing: -0.6,
+                            ),
+                          ),
+                          const SizedBox(width: 1),
+                        ],
                       ),
                       const SizedBox(height: 12),
+                      if (!_loading && _goals.isEmpty)
+                        const Padding(
+                          padding: EdgeInsets.only(top: 10),
+                          child: Text(
+                            'Целей пока нет. Создайте первую копилку.',
+                            style: TextStyle(color: Color(0xFF64748B), fontSize: 14, fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                      for (final g in _goals) ...[
+                        _GoalCard(goal: g),
+                        const SizedBox(height: 12),
+                      ],
+
+                      const SizedBox(height: 8),
+                      _PrimaryCtaButton(
+                        label: _goals.isEmpty ? 'Создать первую цель' : 'Создать цель',
+                        onTap: _openCreateGoal,
+                      ),
                     ],
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 24,
-            child: _PrimaryCtaButton(
-              label: 'Создать цель',
-              onTap: _openCreateGoal,
+              ],
             ),
           ),
         ],
@@ -152,27 +241,42 @@ class _PiggyGoal {
     required this.targetAmount,
     required this.savedAmount,
     required this.currency,
+    required this.progressPercent,
   });
 
   final String id;
   final String name;
   final String iconId;
   final int targetAmount;
-  int savedAmount;
+  final int savedAmount;
   final String currency;
+  final int progressPercent;
 
-  int get progressPercent {
-    if (targetAmount <= 0) return 0;
-    final p = (savedAmount / targetAmount) * 100;
-    return p.clamp(0, 100).round();
+  factory _PiggyGoal.fromJson(Map data) {
+    final saved = (double.tryParse(data['savedAmount']?.toString() ?? '') ?? 0).round();
+    final target = (double.tryParse(data['targetAmount']?.toString() ?? '') ?? 0).round();
+    return _PiggyGoal(
+      id: data['id']?.toString() ?? '',
+      name: data['name']?.toString() ?? 'Цель',
+      iconId: (data['icon']?.toString().trim().isNotEmpty == true) ? data['icon']!.toString().trim() : 'savings',
+      targetAmount: target,
+      savedAmount: saved,
+      currency: data['currency']?.toString() ?? 'RUB',
+      progressPercent: (data['progressPercent'] is int)
+          ? (data['progressPercent'] as int)
+          : (data['progressPercent'] is num)
+              ? (data['progressPercent'] as num).round()
+              : (target <= 0)
+                  ? 0
+                  : ((saved / target) * 100).clamp(0, 100).round(),
+    );
   }
 }
 
 class _GoalCard extends StatelessWidget {
-  const _GoalCard({required this.goal, required this.onAdd});
+  const _GoalCard({required this.goal});
 
   final _PiggyGoal goal;
-  final VoidCallback onAdd;
 
   @override
   Widget build(BuildContext context) {
@@ -253,28 +357,6 @@ class _GoalCard extends StatelessWidget {
               valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFFC1FF05)),
             ),
           ),
-          const SizedBox(height: 12),
-          Row(
-            children: [
-              Expanded(
-                child: _SecondaryCtaButton(
-                  label: 'Пополнить',
-                  onTap: onAdd,
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: _SecondaryCtaButton(
-                  label: 'Настроить',
-                  onTap: () {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Мок: настройки цели')),
-                    );
-                  },
-                ),
-              ),
-            ],
-          ),
         ],
       ),
     );
@@ -294,6 +376,7 @@ class _GoalIcon extends StatelessWidget {
       'home' => Icons.home_rounded,
       'gift' => Icons.card_giftcard_rounded,
       'invest' => Icons.trending_up_rounded,
+      'savings' => Icons.savings_rounded,
       _ => Icons.savings_rounded,
     };
   }
@@ -392,15 +475,16 @@ class _SecondaryCtaButton extends StatelessWidget {
 }
 
 class _CreateGoalSheet extends StatefulWidget {
-  const _CreateGoalSheet({required this.onCreate});
+  const _CreateGoalSheet({required this.onCreated});
 
-  final ValueChanged<_PiggyGoal> onCreate;
+  final VoidCallback onCreated;
 
   @override
   State<_CreateGoalSheet> createState() => _CreateGoalSheetState();
 }
 
 class _CreateGoalSheetState extends State<_CreateGoalSheet> {
+  final _api = ApiClient();
   final _nameCtrl = TextEditingController();
   final _targetCtrl = TextEditingController(text: '50000');
 
@@ -414,27 +498,32 @@ class _CreateGoalSheetState extends State<_CreateGoalSheet> {
     super.dispose();
   }
 
-  void _submit() {
+  Future<void> _submit() async {
     final name = _nameCtrl.text.trim();
-    final target = int.tryParse(_targetCtrl.text.trim()) ?? 0;
+    final target = double.tryParse(_targetCtrl.text.trim()) ?? 0;
 
     if (name.isEmpty || target <= 0) {
       Navigator.of(context).pop();
       return;
     }
 
-    widget.onCreate(
-      _PiggyGoal(
-        id: DateTime.now().microsecondsSinceEpoch.toString(),
-        name: name,
-        iconId: _iconId,
-        targetAmount: target,
-        savedAmount: 0,
-        currency: _currency,
-      ),
-    );
-
-    Navigator.of(context).pop();
+    try {
+      await _api.dio.post(
+        '/goals',
+        data: {
+          'name': name,
+          'icon': _iconId,
+          'targetAmount': target,
+          'currency': _currency,
+        },
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop();
+      widget.onCreated();
+    } catch (_) {
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    }
   }
 
   @override

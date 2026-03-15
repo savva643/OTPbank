@@ -14,6 +14,16 @@ const transactionsService = {
     const where = ['t.user_id = $1'];
     const params = [userId];
 
+    if (query.accountId) {
+      params.push(String(query.accountId));
+      where.push(`t.account_id = $${params.length}`);
+    }
+
+    if (query.cardId) {
+      params.push(String(query.cardId));
+      where.push(`t.card_id = $${params.length}`);
+    }
+
     if (query.type) {
       params.push(String(query.type));
       where.push(`t.type = $${params.length}`);

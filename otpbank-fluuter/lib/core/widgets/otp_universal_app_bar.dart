@@ -8,6 +8,7 @@ class OtpUniversalAppBar extends StatelessWidget {
     this.backHasBackground = false,
     this.backgroundColor,
     this.textColor = const Color(0xFF0F172A),
+    this.actions,
   });
 
   final String title;
@@ -15,6 +16,7 @@ class OtpUniversalAppBar extends StatelessWidget {
   final bool backHasBackground;
   final Color? backgroundColor;
   final Color textColor;
+  final List<Widget>? actions;
 
   @override
   Widget build(BuildContext context) {
@@ -55,6 +57,7 @@ class OtpUniversalAppBar extends StatelessWidget {
                 ),
               ),
             ),
+            if (actions != null) ...actions!,
           ],
         ),
       ),

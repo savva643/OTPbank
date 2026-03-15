@@ -25,7 +25,34 @@ class ApiClient {
           if (token != null) {
             options.headers['authorization'] = 'Bearer $token';
           }
+
+          // ignore: avoid_print
+          print('[dio] --> ${options.method} ${options.baseUrl}${options.path}');
+          // ignore: avoid_print
+          print('[dio] headers: ${options.headers}');
+          // ignore: avoid_print
+          print('[dio] data: ${options.data}');
           handler.next(options);
+        },
+
+        onResponse: (response, handler) {
+          // ignore: avoid_print
+          print(
+            '[dio] <-- ${response.statusCode} ${response.requestOptions.baseUrl}${response.requestOptions.path}',
+          );
+          // ignore: avoid_print
+          print('[dio] response: ${response.data}');
+          handler.next(response);
+        },
+
+        onError: (e, handler) {
+          // ignore: avoid_print
+          print('[dio] xx ${e.type} ${e.message}');
+          // ignore: avoid_print
+          print('[dio] url: ${e.requestOptions.baseUrl}${e.requestOptions.path}');
+          // ignore: avoid_print
+          print('[dio] response: ${e.response?.statusCode} ${e.response?.data}');
+          handler.next(e);
         },
       ),
     );

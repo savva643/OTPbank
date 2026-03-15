@@ -13,7 +13,13 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
   Future<void> _onStarted(ChatStarted event, Emitter<ChatState> emit) async {
     emit(state.copyWith(status: ChatStatus.ready));
     if (state.messages.isEmpty) {
-      emit(state.copyWith(messages: const [ChatMessage(sender: 'support', text: 'Здравствуйте! Чем можем помочь?')]));
+      emit(state.copyWith(messages: [
+        ChatMessage(
+          sender: 'support',
+          text: 'Здравствуйте! Чем можем помочь?',
+          timestamp: DateTime.now(),
+        )
+      ]));
     }
   }
 
@@ -21,7 +27,12 @@ class ChatBloc extends Bloc<ChatEvent, ChatState> {
     final text = event.text.trim();
     if (text.isEmpty) return;
 
-    final next = List<ChatMessage>.from(state.messages)..add(ChatMessage(sender: 'user', text: text));
+    final next = List<ChatMessage>.from(state.messages)
+      ..add(ChatMessage(
+        sender: 'user',
+        text: text,
+        timestamp: DateTime.now(),
+      ));
     emit(state.copyWith(messages: next));
   }
 }

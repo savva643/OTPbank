@@ -3,11 +3,15 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
 
 import '../../../core/theme/otp_colors.dart';
+import '../../../core/network/api_client.dart';
 import '../../../core/widgets/otp_offers_carousel.dart';
 import '../bloc/products_bloc.dart';
 import 'products_search_screen.dart';
 import '../domain/product_ui_config.dart';
 import 'product_details_screen.dart';
+import '../../investments/presentation/investments_screen.dart';
+import '../../goals/presentation/piggy_bank_screen.dart';
+import '../widgets/otp_product_tile.dart';
 
 class ProductsScreen extends StatefulWidget {
   const ProductsScreen({super.key});
@@ -16,7 +20,443 @@ class ProductsScreen extends StatefulWidget {
   State<ProductsScreen> createState() => _ProductsScreenState();
 }
 
+class _ServerProductTile extends StatelessWidget {
+  const _ServerProductTile({required this.cfg, required this.subtitle, required this.onTap});
+
+  final ProductUiConfig cfg;
+  final String? subtitle;
+  final VoidCallback onTap; 
+
+  @override
+  Widget build(BuildContext context) {
+    return OtpProductTile(
+      product: cfg,
+      size: OtpProductTileSize.mediumWide,
+      subtitle: (subtitle == null || subtitle!.trim().isEmpty) ? null : subtitle!.trim(),
+      onTap: onTap,
+    );
+  }
+}
+
 class _ProductsScreenState extends State<ProductsScreen> {
+  final _api = ApiClient();
+
+  void _toast(String text) {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.hideCurrentSnackBar();
+    messenger.showSnackBar(
+      SnackBar(
+        content: Text(text),
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _openCreateAccountSheet() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.45,
+          minChildSize: 0.30,
+          maxChildSize: 0.70,
+          builder: (context, scrollController) {
+            Future<void> create(String type) async {
+              try {
+                await _api.dio.post('/accounts', data: {'type': type, 'currency': 'RUB'});
+                if (!mounted) return;
+                Navigator.of(context).pop();
+                _toast('Счёт создан');
+              } catch (_) {
+                if (!mounted) return;
+                Navigator.of(context).pop();
+                _toast('Не удалось создать счёт');
+              }
+            }
+
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Новый счёт',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                    Expanded(
+                      child: ListView(
+                        controller: scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                        children: [
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.account_balance_rounded, color: Color(0xFF0F172A), size: 18),
+                            ),
+                            title: const Text(
+                              'Обычный счёт',
+                              style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800),
+                            ),
+                            subtitle: const Text(
+                              'Для переводов и оплаты',
+                              style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                            ),
+                            onTap: () => create('debit'),
+                          ),
+                          const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                          ListTile(
+                            contentPadding: EdgeInsets.zero,
+                            leading: Container(
+                              width: 40,
+                              height: 40,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF1F5F9),
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: const Icon(Icons.savings_rounded, color: Color(0xFF0F172A), size: 18),
+                            ),
+                            title: const Text(
+                              'Накопительный счёт',
+                              style: TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800),
+                            ),
+                            subtitle: const Text(
+                              'Сбережения и цели',
+                              style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                            ),
+                            onTap: () => create('savings'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openProductByNameContains(String needle, {required String fallbackTitle}) {
+    final items = context.read<ProductsBloc>().state.searchItems;
+    final matched = items.where((e) => e.title.trim().toLowerCase().contains(needle.toLowerCase())).toList();
+    final productId = matched.isEmpty ? null : matched.first.id;
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => ProductDetailsScreen(
+          productId: productId,
+          titleFallback: fallbackTitle,
+        ),
+      ),
+    );
+  }
+
+  void _openNewCardSheet() {
+    final items = context.read<ProductsBloc>().state.searchItems;
+    final cards = items
+        .where((e) {
+          final t = e.title.toLowerCase();
+          return t.contains('карта') || t.contains('cashback') || t.contains('premium');
+        })
+        .toList();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.62,
+          minChildSize: 0.35,
+          maxChildSize: 0.92,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Новая карта',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                    Expanded(
+                      child: cards.isEmpty
+                          ? ListView(
+                              controller: scrollController,
+                              padding: const EdgeInsets.all(16),
+                              children: const [
+                                Text(
+                                  'Нет доступных карточных продуктов',
+                                  style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              controller: scrollController,
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              itemCount: cards.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                              itemBuilder: (context, index) {
+                                final p = cards[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      ProductUiConfig.byTitle(p.title).icon,
+                                      color: const Color(0xFF0F172A),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    p.title,
+                                    style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800),
+                                  ),
+                                  subtitle: p.categoryName == null
+                                      ? null
+                                      : Text(
+                                          p.categoryName!,
+                                          style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                        ),
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(this.context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => ProductDetailsScreen(
+                                          productId: p.id,
+                                          titleFallback: p.title,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  void _openCreditsSheet() {
+    final items = context.read<ProductsBloc>().state.searchItems;
+    final credits = items
+        .where((e) {
+          final t = e.title.toLowerCase();
+          return t.contains('кредит') || t.contains('ипот') || t.contains('займ');
+        })
+        .toList();
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.70,
+          minChildSize: 0.35,
+          maxChildSize: 0.92,
+          builder: (context, scrollController) {
+            return Container(
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+              ),
+              child: SafeArea(
+                top: false,
+                child: Column(
+                  children: [
+                    const SizedBox(height: 10),
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: Color(0xFFE2E8F0),
+                          borderRadius: BorderRadius.circular(9999),
+                        ),
+                      ),
+                    ),
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(16, 12, 8, 8),
+                      child: Row(
+                        children: [
+                          const Expanded(
+                            child: Text(
+                              'Кредиты',
+                              style: TextStyle(
+                                color: Color(0xFF0F172A),
+                                fontSize: 18,
+                                fontWeight: FontWeight.w800,
+                                height: 1.3,
+                              ),
+                            ),
+                          ),
+                          IconButton(
+                            onPressed: () => Navigator.of(context).pop(),
+                            icon: const Icon(Icons.close_rounded),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 1, thickness: 1, color: Color(0xFFF1F5F9)),
+                    Expanded(
+                      child: credits.isEmpty
+                          ? ListView(
+                              controller: scrollController,
+                              padding: const EdgeInsets.all(16),
+                              children: const [
+                                Text(
+                                  'Нет кредитных продуктов',
+                                  style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                ),
+                              ],
+                            )
+                          : ListView.separated(
+                              controller: scrollController,
+                              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+                              itemCount: credits.length,
+                              separatorBuilder: (_, __) => const Divider(height: 1, color: Color(0xFFF1F5F9)),
+                              itemBuilder: (context, index) {
+                                final p = credits[index];
+                                return ListTile(
+                                  contentPadding: EdgeInsets.zero,
+                                  leading: Container(
+                                    width: 40,
+                                    height: 40,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFF1F5F9),
+                                      borderRadius: BorderRadius.circular(12),
+                                    ),
+                                    child: Icon(
+                                      ProductUiConfig.byTitle(p.title).icon,
+                                      color: const Color(0xFF0F172A),
+                                      size: 18,
+                                    ),
+                                  ),
+                                  title: Text(
+                                    p.title,
+                                    style: const TextStyle(color: Color(0xFF0F172A), fontWeight: FontWeight.w800),
+                                  ),
+                                  subtitle: p.categoryName == null
+                                      ? null
+                                      : Text(
+                                          p.categoryName!,
+                                          style: const TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600),
+                                        ),
+                                  onTap: () {
+                                    Navigator.of(context).pop();
+                                    Navigator.of(this.context).push(
+                                      MaterialPageRoute<void>(
+                                        builder: (_) => ProductDetailsScreen(
+                                          productId: p.id,
+                                          titleFallback: p.title,
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                );
+                              },
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
   @override
   void initState() {
     super.initState();
@@ -27,18 +467,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
   Widget build(BuildContext context) {
     final state = context.watch<ProductsBloc>().state;
 
-    final searchItems = <String>{
-      ...state.categories,
-      'Автокредит',
-      'Кредит наличными',
-      'Ипотека на новостройку',
-      'Загородный дом',
-      'Страхование',
-      'Инвестиции',
-      'Путешествия',
-      'Накопительный счёт',
-      'Инвесткопилка',
-    }.toList()..sort();
+    final searchItems = state.searchItems;
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -77,85 +506,127 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             padding: EdgeInsets.symmetric(horizontal: 24),
                             child: Text('Загрузка...'),
                           ),
-                        _SectionHeader(
-                          title: 'Кредиты',
-                          action: 'Все',
-                          onActionTap: () {},
-                        ),
-                        const SizedBox(height: 16),
-                        const _HorizontalProductsRow(
-                          items: [
-                            _ProductCardData(
-                              title: 'Автокредит',
-                              subtitle: 'Новое авто или с пробегом',
-                              badgeText: 'ВЫГОДНО',
-                              badgeValue: 'от 4.5%',
-                              variant: _ProductCardVariant.light,
-                              icon: Icons.directions_car_rounded,
-                            ),
-                            _ProductCardData(
-                              title: 'Кредит\nналичными',
-                              subtitle: 'До 2 000 000 ₽',
-                              badgeText: 'БЫСТРО',
-                              badgeValue: 'за 5 мин',
-                              variant: _ProductCardVariant.dark,
-                              icon: Icons.account_balance_wallet_rounded,
-                            ),
-                            _ProductCardData(
-                              title: 'Ипотека на\nновостройку',
-                              subtitle: 'Первый взнос от 15%',
-                              badgeText: 'АКЦИЯ',
-                              badgeValue: '6%',
-                              variant: _ProductCardVariant.purple,
-                              icon: Icons.home_work_rounded,
-                            ),
-                            _ProductCardData(
-                              title: 'Загородный дом',
-                              subtitle: 'ИЖС и участки',
-                              badgeText: null,
-                              badgeValue: null,
-                              variant: _ProductCardVariant.purple,
-                              icon: Icons.house_siding_rounded,
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 32),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24),
-                          child: Text(
-                            'Другое',
-                            style: TextStyle(
-                              color: Color(0xFF0F172A),
-                              fontSize: 20,
-                              fontWeight: FontWeight.w700,
-                              height: 1.40,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        const Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 24),
-                          child: Row(
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 24),
+                          child: Column(
                             children: [
-                              Expanded(
-                                child: _MiniTile(
-                                  title: 'Страхование',
-                                  subtitle: 'Жизнь и здоровье',
-                                  icon: Icons.health_and_safety_rounded,
-                                ),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Новая карта',
+                                      subtitle: 'Выпуск онлайн',
+                                      icon: Icons.credit_card_rounded,
+                                      onTap: _openNewCardSheet,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Новый счёт',
+                                      subtitle: 'Открыть счёт',
+                                      icon: Icons.account_balance_rounded,
+                                      onTap: _openCreateAccountSheet,
+                                    ),
+                                  ),
+                                ],
                               ),
-                              SizedBox(width: 16),
-                              Expanded(
-                                child: _MiniTile(
-                                  title: 'Инвестиции',
-                                  subtitle: 'Акции и облигации',
-                                  icon: Icons.trending_up_rounded,
-                                ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Кредиты',
+                                      subtitle: 'Все программы',
+                                      icon: Icons.request_quote_rounded,
+                                      onTap: _openCreditsSheet,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Копилка',
+                                      subtitle: 'Цели и накопления',
+                                      icon: Icons.savings_rounded,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute<void>(builder: (_) => const PiggyBankScreen()),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Инвестиции',
+                                      subtitle: 'Рынок и портфель',
+                                      icon: Icons.trending_up_rounded,
+                                      onTap: () {
+                                        Navigator.of(context).push(
+                                          MaterialPageRoute<void>(builder: (_) => const InvestmentsScreen()),
+                                        );
+                                      },
+                                    ),
+                                  ),
+                                  const SizedBox(width: 16),
+                                  Expanded(
+                                    child: _MiniTile(
+                                      title: 'Страхование',
+                                      subtitle: 'Полисы и защита',
+                                      icon: Icons.health_and_safety_rounded,
+                                      onTap: () => _openProductByNameContains('страх', fallbackTitle: 'Страхование'),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ],
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: 24),
+
+                        for (final cat in state.catalog) ...[
+                          _SectionHeader(
+                            title: cat.name,
+                            action: 'Все',
+                            onActionTap: () {},
+                          ),
+                          const SizedBox(height: 14),
+                          SizedBox(
+                            height: 140,
+                            child: ListView.separated(
+                              padding: const EdgeInsets.symmetric(horizontal: 24),
+                              scrollDirection: Axis.horizontal,
+                              itemCount: cat.products.length,
+                              separatorBuilder: (_, __) => const SizedBox(width: 12),
+                              itemBuilder: (context, index) {
+                                final p = cat.products[index];
+                                final cfg = ProductUiConfig.byTitle(p.title);
+                                return SizedBox(
+                                  width: 220,
+                                  child: _ServerProductTile(
+                                    cfg: cfg,
+                                    subtitle: p.description,
+                                    onTap: () {
+                                      Navigator.of(context).push(
+                                        MaterialPageRoute<void>(
+                                          builder: (_) => ProductDetailsScreen(
+                                            productId: p.id,
+                                            titleFallback: p.title,
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                          const SizedBox(height: 24),
+                        ],
                       ],
                     ),
                   ),
@@ -205,10 +676,15 @@ class _ProductsHeaderState extends State<_ProductsHeader> {
   @override
   Widget build(BuildContext context) {
     void openProduct(String title) {
+      final items = context.read<ProductsBloc>().state.searchItems;
+      final matched = items.where((e) => e.title.trim().toLowerCase() == title.trim().toLowerCase()).toList();
+      final productId = matched.isEmpty ? null : matched.first.id;
+
       Navigator.of(context).push(
         MaterialPageRoute<void>(
           builder: (_) => ProductDetailsScreen(
-            data: ProductDetailsMock.byTitle(title),
+            productId: productId,
+            titleFallback: title,
           ),
         ),
       );
@@ -665,6 +1141,7 @@ class _ProductCardData {
     required this.subtitle,
     required this.icon,
     required this.variant,
+    this.onTap,
     this.badgeText,
     this.badgeValue,
   });
@@ -672,6 +1149,7 @@ class _ProductCardData {
   final String title;
   final String subtitle;
   final IconData icon;
+  final VoidCallback? onTap;
   final _ProductCardVariant variant;
   final String? badgeText;
   final String? badgeValue;
@@ -758,6 +1236,9 @@ class _ProductCardState extends State<_ProductCard> {
   Widget build(BuildContext context) {
     final d = widget.data;
     final cfg = ProductUiConfig.byTitle(d.title.replaceAll('\n', ' '));
+    final items = context.read<ProductsBloc>().state.searchItems;
+    final matched = items.where((e) => e.title.trim().toLowerCase() == cfg.title.trim().toLowerCase()).toList();
+    final productId = matched.isEmpty ? null : matched.first.id;
     final isDarkBg = cfg.tileBg.computeLuminance() < 0.18;
     final isWide = d.title.contains('Автокредит') || d.title.contains('Ипотека');
 
@@ -767,7 +1248,8 @@ class _ProductCardState extends State<_ProductCard> {
         Navigator.of(context).push(
           MaterialPageRoute<void>(
             builder: (_) => ProductDetailsScreen(
-              data: ProductDetailsMock.byTitle(cfg.title),
+              productId: productId,
+              titleFallback: cfg.title,
             ),
           ),
         );
@@ -865,11 +1347,12 @@ class _ProductCardState extends State<_ProductCard> {
 }
 
 class _MiniTile extends StatefulWidget {
-  const _MiniTile({required this.title, required this.subtitle, required this.icon});
+  const _MiniTile({required this.title, required this.subtitle, required this.icon, this.onTap});
 
   final String title;
   final String subtitle;
   final IconData icon;
+  final VoidCallback? onTap;
 
   @override
   State<_MiniTile> createState() => _MiniTileState();
@@ -880,7 +1363,7 @@ class _MiniTileState extends State<_MiniTile> {
   Widget build(BuildContext context) {
     return InkWell(
       borderRadius: BorderRadius.circular(24),
-      onTap: () {},
+      onTap: widget.onTap,
       child: Container(
         height: 160,
         padding: const EdgeInsets.all(20),
@@ -905,11 +1388,11 @@ class _MiniTileState extends State<_MiniTile> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Container(
-              width: 40,
-              height: 40,
+              width: 48,
+              height: 36,
               decoration: BoxDecoration(
                 color: const Color(0xFFF8FAFC),
-                borderRadius: BorderRadius.circular(36),
+                borderRadius: BorderRadius.circular(12),
                 boxShadow: const [
                   BoxShadow(
                     color: Color(0x0C000000),

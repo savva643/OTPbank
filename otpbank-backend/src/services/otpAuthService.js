@@ -29,6 +29,10 @@ function signAccessToken(userId) {
   return jwt.sign({}, env.jwtSecret, { subject: userId, expiresIn: '7d' });
 }
 
+function generateCvc() {
+  return String(Math.floor(100 + Math.random() * 900));
+}
+
 function signRegistrationToken(phone) {
   if (!env.jwtSecret) throw new ApiError(500, 'misconfigured', 'JWT_SECRET не задан');
   return jwt.sign({ type: 'registration', phone }, env.jwtSecret, { expiresIn: '15m' });
@@ -39,10 +43,34 @@ function generateMaskedPan() {
   return `**** **** **** ${last4}`;
 }
 
+function toShortName(fullName) {
+  const parts = String(fullName || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return '';
+  if (parts.length >= 2) return parts[1];
+  return parts[0];
+}
+
+function parseFullName(fullName) {
+  const parts = String(fullName || '')
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  if (parts.length === 0) return { lastName: '', firstName: '', middleName: '' };
+  if (parts.length === 1) return { lastName: '', firstName: parts[0], middleName: '' };
+  return {
+    lastName: parts[0],
+    firstName: parts[1] ?? '',
+    middleName: parts.slice(2).join(' '),
+  };
+}
+
 async function createDefaultUserArtifacts(tx, userId) {
   const accountRes = await tx.query(
     `INSERT INTO accounts (user_id, type, title, balance, currency)
-     VALUES ($1, 'debit', 'Основной счёт', 0, 'RUB')
+     VALUES ($1, 'debit', 'Основной счёт', 4250, 'RUB')
      RETURNING id`,
     [userId]
   );
@@ -50,9 +78,9 @@ async function createDefaultUserArtifacts(tx, userId) {
   const accountId = accountRes.rows[0].id;
 
   await tx.query(
-    `INSERT INTO cards (account_id, user_id, product_type, masked_pan, status, limit_per_tx, limit_per_day)
-     VALUES ($1, $2, $3, $4, 'active', 50000, 200000)`,
-    [accountId, userId, 'debit_card', generateMaskedPan()]
+    `INSERT INTO cards (account_id, user_id, product_type, label, masked_pan, cvc, status, bg_color1, bg_color2, limit_per_tx, limit_per_day)
+     VALUES ($1, $2, $3, $4, $5, $6, 'active', $7, $8, 50000, 200000)`,
+    [accountId, userId, 'debit', 'Дебетовая', generateMaskedPan(), generateCvc(), '#0F172A', '#1E293B']
   );
 
   await tx.query(
@@ -89,7 +117,9 @@ const otpAuthService = {
       [normalized, codeHash, ttlSeconds]
     );
 
+    console.log('[otpAuthService] About to send SMS with code:', code, 'to phone:', normalized);
     await smsAeroService.sendOtp({ phone: normalized, code });
+    console.log('[otpAuthService] SMS send completed');
 
     return {
       ok: true,
@@ -135,6 +165,7 @@ const otpAuthService = {
 
     const userRes = await pool.query(
       `SELECT id, name, phone, email, avatar_url
+             , full_name
        FROM users
        WHERE phone = $1
        LIMIT 1`,
@@ -151,6 +182,7 @@ const otpAuthService = {
         user: {
           id: u.id,
           name: u.name,
+          fullName: u.full_name,
           phone: u.phone,
           email: u.email,
           avatarUrl: u.avatar_url
@@ -185,6 +217,8 @@ const otpAuthService = {
     if (!phone) throw new ApiError(400, 'validation_error', 'phone обязателен');
 
     const safeFullName = String(fullName || '').trim();
+    const { lastName, firstName, middleName } = parseFullName(safeFullName);
+    const safeName = toShortName(safeFullName) || firstName || safeFullName;
     const safeEmail = email ? String(email).trim().toLowerCase() : null;
     const safeGender = gender ? String(gender).trim() : null;
     const safeBirthDate = birthDate ? String(birthDate).trim() : null;
@@ -200,12 +234,15 @@ const otpAuthService = {
       await client.query('BEGIN');
 
       const { rows } = await client.query(
-        `INSERT INTO users (name, full_name, phone, email, gender, birth_date, avatar_url, password_hash)
-         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-         RETURNING id, name, phone, email, avatar_url`,
+        `INSERT INTO users (name, full_name, last_name, first_name, middle_name, phone, email, gender, birth_date, avatar_url, password_hash)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+         RETURNING id, name, full_name, last_name, first_name, middle_name, phone, email, avatar_url`,
         [
+          safeName,
           safeFullName,
-          safeFullName,
+          lastName || null,
+          firstName || null,
+          middleName || null,
           phone,
           safeEmail,
           safeGender,
@@ -228,6 +265,10 @@ const otpAuthService = {
         user: {
           id: user.id,
           name: user.name,
+          fullName: user.full_name,
+          firstName: user.first_name,
+          lastName: user.last_name,
+          middleName: user.middle_name,
           phone: user.phone,
           email: user.email,
           avatarUrl: user.avatar_url

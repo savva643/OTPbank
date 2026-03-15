@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../../chat/presentation/chat_screen.dart';
+import '../../chat/presentation/chat_list_screen.dart';
 import '../../history/presentation/history_screen.dart';
 import '../../home/presentation/home_screen.dart';
 import '../../payments/presentation/payments_screen.dart';
 import '../../products/presentation/products_screen.dart';
+import '../../business/presentation/business_screen.dart';
 import '../../../core/theme/otp_colors.dart';
 
 class RootShell extends StatefulWidget {
@@ -30,7 +32,7 @@ class RootShellState extends State<RootShell> {
     HomeScreen(),
     PaymentsScreen(),
     HistoryScreen(),
-    ChatScreen(),
+    ChatListScreen(),
     ProductsScreen(),
   ];
 

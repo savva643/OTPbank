@@ -26,6 +26,84 @@ class ProductUiConfig {
     iconBg: Color(0xFFFFFFFF),
   );
 
+  static const cashbackCard = ProductUiConfig(
+    id: 'cashback_card',
+    title: 'Дебетовая карта Cashback',
+    icon: Icons.percent_rounded,
+    gradientColors: [
+      Color(0xFFC8E1FC),
+      Color(0xFFF1F5F9),
+      Color(0xFFFFFFFF),
+    ],
+    tileBg: Color(0xFFC8E1FC),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
+  static const creditCard = ProductUiConfig(
+    id: 'credit_card',
+    title: 'Кредитная карта',
+    icon: Icons.credit_card_rounded,
+    gradientColors: [
+      Color(0xFFF3E8FF),
+      Color(0xFFF8FAFC),
+      Color(0xFFFFFFFF),
+    ],
+    tileBg: Color(0xFFF3E8FF),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
+  static const paydayLoan = ProductUiConfig(
+    id: 'payday_loan',
+    title: 'Займ до зарплаты',
+    icon: Icons.flash_on_rounded,
+    gradientColors: [
+      Color(0xFFFFEDD5),
+      Color(0xFFF8FAFC),
+      Color(0xFFFFFFFF),
+    ],
+    tileBg: Color(0xFFFFEDD5),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
+  static const fxExchange = ProductUiConfig(
+    id: 'fx_exchange',
+    title: 'Обмен валют',
+    icon: Icons.currency_exchange_rounded,
+    gradientColors: [
+      Color(0xFFDBEAFE),
+      Color(0xFFF1F5F9),
+      Color(0xFFFFFFFF),
+    ],
+    tileBg: Color(0xFFDBEAFE),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
+  static const businessAccount = ProductUiConfig(
+    id: 'business_account',
+    title: 'Расчётный счёт для бизнеса',
+    icon: Icons.business_center_rounded,
+    gradientColors: [
+      Color(0xFFF1F5F9),
+      Color(0xFFE2E8F0),
+      Color(0xFFFFFFFF),
+    ],
+    tileBg: Color(0xFFF1F5F9),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
+  static const premium = ProductUiConfig(
+    id: 'premium_plus',
+    title: 'OTP Premium+',
+    icon: Icons.star_rounded,
+    gradientColors: [
+      Color(0xFFF3E8FF),
+      Color(0xFF0F172A),
+      Color(0xFF1E293B),
+    ],
+    tileBg: Color(0xFF9E6FC3),
+    iconBg: Color(0xFFFFFFFF),
+  );
+
   static const travel = ProductUiConfig(
     id: 'travel',
     title: 'Путешествия',
@@ -125,6 +203,12 @@ class ProductUiConfig {
     insurance,
     investments,
     cashLoan,
+    cashbackCard,
+    creditCard,
+    paydayLoan,
+    fxExchange,
+    businessAccount,
+    premium,
   ];
 
   static ProductUiConfig byTitle(String title) {
@@ -140,6 +224,13 @@ class ProductUiConfig {
     if (t.contains('страх')) return insurance;
     if (t.contains('инвест')) return investments;
     if (t.contains('налич')) return cashLoan;
+
+    if (t.contains('cashback') || t.contains('кэшбэк') || t.contains('кешбек')) return cashbackCard;
+    if (t.contains('кредитн') && t.contains('карт')) return creditCard;
+    if (t.contains('займ')) return paydayLoan;
+    if (t.contains('обмен') || t.contains('валют')) return fxExchange;
+    if (t.contains('бизнес') || t.contains('расч')) return businessAccount;
+    if (t.contains('premium') || t.contains('премиум')) return premium;
 
     return _fallback.copyWith(title: title);
   }

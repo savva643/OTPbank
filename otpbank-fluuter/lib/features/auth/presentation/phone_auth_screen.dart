@@ -16,6 +16,23 @@ class PhoneAuthScreen extends StatefulWidget {
 class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
   final _phoneCtrl = TextEditingController(text: '+7');
 
+  PageRoute<void> _fadeSlideRoute(Widget child) {
+    return PageRouteBuilder<void>(
+      transitionDuration: const Duration(milliseconds: 320),
+      reverseTransitionDuration: const Duration(milliseconds: 320),
+      pageBuilder: (context, animation, secondaryAnimation) => child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+        final slide = Tween<Offset>(begin: const Offset(0, 0.04), end: Offset.zero)
+            .chain(CurveTween(curve: Curves.easeOut));
+        return FadeTransition(
+          opacity: fade,
+          child: SlideTransition(position: fade.drive(slide), child: child),
+        );
+      },
+    );
+  }
+
   @override
   void dispose() {
     _phoneCtrl.dispose();
@@ -28,9 +45,7 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
       listenWhen: (prev, next) => prev.status != next.status,
       listener: (context, state) {
         if (state.status == AuthStatus.codeRequested) {
-          Navigator.of(context).push(
-            MaterialPageRoute<void>(builder: (_) => const VerifyCodeScreen()),
-          );
+          Navigator.of(context).push(_fadeSlideRoute(const VerifyCodeScreen()));
         }
       },
       child: Builder(
@@ -46,31 +61,34 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 16),
-                    Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        color: OtpColors.primaryLime,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: const Center(
-                        child: Icon(Icons.lock_rounded, color: Color(0xFF0F172A)),
-                      ),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [ 
+                        Hero(
+                          tag: 'app_logo',
+                          child: Image.asset(
+                            'assets/img/logo.png',
+                            height: 44,
+                            color: Colors.black,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: 18),
                     const Text(
                       'Вход',
                       style: TextStyle(
                         color: Color(0xFF0F172A),
-                        fontSize: 28,
+                        fontSize: 30,
                         fontWeight: FontWeight.w900,
-                        height: 1.2,
-                        letterSpacing: -0.6,
+                        height: 1.15,
+                        letterSpacing: -0.7,
                       ),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: 8),
                     const Text(
-                      'Введите номер телефона —\nмы отправим код подтверждения',
+                      'Введите номер телефона — мы отправим код подтверждения',
                       style: TextStyle(
                         color: Color(0xFF64748B),
                         fontSize: 15,
@@ -78,12 +96,30 @@ class _PhoneAuthScreenState extends State<PhoneAuthScreen> {
                         height: 1.45,
                       ),
                     ),
-                    const SizedBox(height: 18),
-                    TextField(
-                      controller: _phoneCtrl,
-                      keyboardType: TextInputType.phone,
-                      decoration: const InputDecoration(
-                        hintText: '+7 999 000-00-00',
+                    const SizedBox(height: 24),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFE2E8F0), width: 1),
+                      ),
+                      child: TextField(
+                        controller: _phoneCtrl,
+                        keyboardType: TextInputType.phone,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                          color: Color(0xFF0F172A),
+                        ),
+                        decoration: const InputDecoration(
+                          hintText: '+7 999 000-00-00',
+                          hintStyle: TextStyle(
+                            color: Color(0xFF94A3B8),
+                            fontWeight: FontWeight.w500,
+                          ),
+                          border: InputBorder.none,
+                          contentPadding: EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                        ),
                       ),
                     ),
                     const Spacer(),

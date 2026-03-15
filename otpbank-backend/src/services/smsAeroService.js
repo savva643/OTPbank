@@ -64,6 +64,14 @@ const smsAeroService = {
 
     const path = `/v2/sms/send`;
 
+    console.log('[smsAeroService] ===== SMS SEND ATTEMPT =====');
+    console.log('[smsAeroService] Phone:', safePhone);
+    console.log('[smsAeroService] Code:', code);
+    console.log('[smsAeroService] Text:', text);
+    console.log('[smsAeroService] Email:', env.smsAeroEmail);
+    console.log('[smsAeroService] API Key exists:', !!env.smsAeroApiKey);
+    console.log('[smsAeroService] Sign:', env.smsAeroSign);
+    
     const { statusCode, body } = await requestJson({
       method: 'POST',
       hostname: 'gate.smsaero.ru',
@@ -76,17 +84,27 @@ const smsAeroService = {
         number: safePhone,
         text,
         sign: env.smsAeroSign,
-        shortLink: 1
+        channel: 'DIRECT',
+        shortLink: 0
       }
     });
 
+    console.log('[smsAeroService] Response status:', statusCode);
+    console.log('[smsAeroService] Response body:', JSON.stringify(body, null, 2));
+    console.log('[smsAeroService] Success check:', body && body.success);
+    console.log('[smsAeroService] ===== SMS SEND COMPLETE =====');
+
     const ok = statusCode >= 200 && statusCode < 300;
     if (!ok) {
-      throw new ApiError(502, 'sms_provider_error', 'Не удалось отправить SMS');
+      const providerMsg = body && body.message ? String(body.message) : 'Не удалось отправить SMS';
+      const details = body && body.data ? ` Details: ${JSON.stringify(body.data)}` : '';
+      throw new ApiError(502, 'sms_provider_error', `${providerMsg}${details}`);
     }
 
     if (body && body.success === false) {
-      throw new ApiError(502, 'sms_provider_error', body.message || 'Не удалось отправить SMS');
+      const providerMsg = body && body.message ? String(body.message) : 'Не удалось отправить SMS';
+      const details = body && body.data ? ` Details: ${JSON.stringify(body.data)}` : '';
+      throw new ApiError(502, 'sms_provider_error', `${providerMsg}${details}`);
     }
 
     return { provider: 'smsaero', ok: true, result: body };

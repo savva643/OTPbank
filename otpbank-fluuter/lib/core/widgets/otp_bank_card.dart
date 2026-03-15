@@ -13,6 +13,7 @@ class OtpBankCard extends StatefulWidget {
     required this.amount,
     required this.pan,
     this.variant = OtpBankCardVariant.dark,
+    this.customGradient,
     this.onTap,
   });
 
@@ -20,9 +21,11 @@ class OtpBankCard extends StatefulWidget {
   final String amount;
   final String pan;
   final OtpBankCardVariant variant;
+  final Gradient? customGradient;
   final VoidCallback? onTap;
 
   Gradient get gradient {
+    if (customGradient != null) return customGradient!;
     return switch (variant) {
       OtpBankCardVariant.dark => const LinearGradient(
           begin: Alignment(0.22, -0.22),

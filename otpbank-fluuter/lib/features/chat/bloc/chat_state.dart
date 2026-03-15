@@ -3,13 +3,20 @@ part of 'chat_bloc.dart';
 enum ChatStatus { initial, ready }
 
 class ChatMessage extends Equatable {
-  const ChatMessage({required this.sender, required this.text});
+  const ChatMessage({
+    required this.sender,
+    required this.text,
+    this.timestamp,
+    this.isRead = false,
+  });
 
   final String sender;
   final String text;
+  final DateTime? timestamp;
+  final bool isRead;
 
   @override
-  List<Object?> get props => [sender, text];
+  List<Object?> get props => [sender, text, timestamp, isRead];
 }
 
 class ChatState extends Equatable {

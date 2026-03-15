@@ -68,6 +68,12 @@ class OtpProductTile extends StatelessWidget {
 
     final iconContainerColor = isDark ? Colors.white : product.iconBg;
 
+    // Определяем фиксированную высоту для средних и больших плиток
+    final fixedHeight = _height();
+
+    // Для маленьких плиток высота будет определяться контентом
+    final useFixedHeight = fixedHeight != null;
+
     Widget content;
 
     if (size == OtpProductTileSize.small) {
@@ -128,6 +134,7 @@ class OtpProductTile extends StatelessWidget {
       final subtitleFontSize = isMedium ? 11.0 : 12.0;
 
       content = Column(
+        mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
@@ -180,9 +187,10 @@ class OtpProductTile extends StatelessWidget {
             ],
           ),
           SizedBox(height: isMedium ? 8 : 12),
-          Expanded(
+          // Используем Flexible вместо Expanded для правильного распределения пространства
+          Flexible(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,  
+              mainAxisAlignment: MainAxisAlignment.end,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
@@ -197,7 +205,7 @@ class OtpProductTile extends StatelessWidget {
                   ),
                 ),
                 if (subtitle != null) ...[
-                  const SizedBox(height: 2),   
+                  const SizedBox(height: 2),
                   Text(
                     subtitle!,
                     maxLines: subtitleMaxLines,
@@ -222,7 +230,7 @@ class OtpProductTile extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        height: _height(),
+        height: useFixedHeight ? fixedHeight : null,
         padding: _padding(),
         decoration: BoxDecoration(
           color: size == OtpProductTileSize.small ? const Color(0xFFF8FAFC) : product.tileBg,

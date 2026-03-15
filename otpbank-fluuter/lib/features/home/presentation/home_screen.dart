@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../bloc/home_bloc.dart';
+import '../../products/bloc/products_bloc.dart';
 import 'home_tab_content.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -16,6 +17,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     context.read<HomeBloc>().add(const HomeRequested());
+    context.read<ProductsBloc>().add(const ProductsRequested());
   }
 
   @override

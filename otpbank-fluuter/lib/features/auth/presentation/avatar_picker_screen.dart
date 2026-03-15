@@ -78,10 +78,6 @@ class AvatarPickerScreen extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              'Если картинок ещё нет — просто добавь файлы avatar1.png..avatar4.png в assets/avatars/.',
-              style: TextStyle(color: Color(0xFF64748B), fontSize: 12, height: 1.35),
-            ),
           ],
         ),
       ),

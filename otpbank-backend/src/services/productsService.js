@@ -83,6 +83,14 @@ const productsService = {
       [productId]
     );
 
+    const widgetsRes = await pool.query(
+      `SELECT id, type, title, subtitle, icon, bg_color, border_color, cta_label, cta_action, cta_payload, payload, sort_order
+       FROM product_widgets
+       WHERE product_id = $1 AND is_active = true
+       ORDER BY sort_order ASC, created_at DESC`,
+      [productId]
+    );
+
     return {
       id: p.id,
       name: p.name,
@@ -107,6 +115,20 @@ const productsService = {
         ctaLabel: o.cta_label,
         ctaColor: o.cta_color,
         sortOrder: o.sort_order
+      })),
+      widgets: widgetsRes.rows.map((w) => ({
+        id: w.id,
+        type: w.type,
+        title: w.title,
+        subtitle: w.subtitle,
+        icon: w.icon,
+        bgColor: w.bg_color,
+        borderColor: w.border_color,
+        ctaLabel: w.cta_label,
+        ctaAction: w.cta_action,
+        ctaPayload: w.cta_payload,
+        payload: w.payload,
+        sortOrder: w.sort_order
       }))
     };
   },

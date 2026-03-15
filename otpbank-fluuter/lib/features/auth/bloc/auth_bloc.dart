@@ -58,12 +58,12 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       if (data is Map && data['isNew'] == true) {
         emit(state.copyWith(
           status: AuthStatus.needsRegistration,
-          registrationToken: String(data['registrationToken'] ?? ''),
+          registrationToken: data['registrationToken']?.toString() ?? '',
         ));
         return;
       }
 
-      final token = data is Map ? String(data['accessToken'] ?? '') : '';
+      final token = data is Map ? data['accessToken']?.toString() ?? '' : '';
       if (token.isEmpty) {
         emit(state.copyWith(status: AuthStatus.failure));
         return;
@@ -93,7 +93,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       );
 
       final data = res.data;
-      final token = data is Map ? String(data['accessToken'] ?? '') : '';
+      final token = data is Map ? data['accessToken']?.toString() ?? '' : '';
       if (token.isEmpty) {
         emit(state.copyWith(status: AuthStatus.failure));
         return;

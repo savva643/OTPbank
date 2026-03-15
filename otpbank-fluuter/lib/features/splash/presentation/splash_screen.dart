@@ -14,7 +14,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen> {
   bool _visible = false;
-  bool _hiding = false;
 
   @override
   void initState() {
@@ -24,21 +23,23 @@ class _SplashScreenState extends State<SplashScreen> {
       setState(() => _visible = true);
     });
 
-    Future<void>.delayed(const Duration(milliseconds: 900), () {
-      if (!mounted) return;
-      setState(() => _hiding = true);
-    });
-
-    Future<void>.delayed(const Duration(milliseconds: 1300), () async {
+    Future<void>.delayed(const Duration(milliseconds: 1050), () async {
       if (!mounted) return;
 
       final token = await AuthTokenStorage().getAccessToken();
       if (!mounted) return;
 
+      final next = token != null ? const RootShell() : const PhoneAuthScreen();
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute<void>(
-          builder: (_) => token != null ? const RootShell() : const PhoneAuthScreen(),
-        ),
+        PageRouteBuilder<void>(
+          transitionDuration: const Duration(milliseconds: 380),
+          reverseTransitionDuration: const Duration(milliseconds: 380),
+          pageBuilder: (context, animation, secondaryAnimation) => next,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        )
       );
     });
   }
@@ -55,16 +56,19 @@ class _SplashScreenState extends State<SplashScreen> {
       body: SafeArea(
         child: Center(
           child: AnimatedOpacity(
-            opacity: _visible && !_hiding ? 1 : 0,
+            opacity: _visible ? 1 : 0,
             duration: const Duration(milliseconds: 380),
             child: AnimatedScale(
-              scale: _visible && !_hiding ? 1 : 0.92,
+              scale: _visible ? 1 : 0.92,
               duration: const Duration(milliseconds: 380),
               curve: Curves.easeOut,
-              child: Image.asset(
-                'assets/img/logo.png',
-                width: 184,
-                fit: BoxFit.contain,
+              child: Hero(
+                tag: 'app_logo',
+                child: Image.asset(
+                  'assets/img/logo.png',
+                  width: 184,
+                  fit: BoxFit.contain,
+                ),
               ),
             ),
           ),

@@ -23,6 +23,10 @@ function generateMaskedPan() {
   return `**** **** **** ${last4}`;
 }
 
+function generateCvc() {
+  return String(Math.floor(100 + Math.random() * 900));
+}
+
 function signAccessToken(userId) {
   if (!env.jwtSecret) throw new ApiError(500, 'misconfigured', 'JWT_SECRET не задан');
   return jwt.sign({}, env.jwtSecret, { subject: userId, expiresIn: '7d' });
@@ -64,9 +68,9 @@ const authService = {
       const accountId = accountRes.rows[0].id;
 
       await pool.query(
-        `INSERT INTO cards (account_id, user_id, product_type, masked_pan, status, limit_per_tx, limit_per_day)
-         VALUES ($1, $2, $3, $4, 'active', 50000, 200000)`,
-        [accountId, user.id, 'debit_card', generateMaskedPan()]
+        `INSERT INTO cards (account_id, user_id, product_type, masked_pan, cvc, status, limit_per_tx, limit_per_day)
+         VALUES ($1, $2, $3, $4, $5, 'active', 50000, 200000)`,
+        [accountId, user.id, 'debit_card', generateMaskedPan(), generateCvc()]
       );
 
       await pool.query(

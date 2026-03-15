@@ -12,11 +12,13 @@ class OtpRoundActionButton extends StatefulWidget {
     required this.label,
     required this.icon,
     required this.onTap,
+    this.iconWidget,
     this.style = OtpRoundActionStyle.secondary,
   });
 
   final String label;
   final IconData icon;
+  final Widget? iconWidget;
   final VoidCallback? onTap;
   final OtpRoundActionStyle style;
 
@@ -64,7 +66,9 @@ class _OtpRoundActionButtonState extends State<OtpRoundActionButton> {
                         ]
                       : null,
                 ),
-                child: Icon(widget.icon, size: 22, color: fg),
+                child: Center(
+                  child: widget.iconWidget ?? Icon(widget.icon, size: 22, color: fg),
+                ),
               ),
             ),
           ),
