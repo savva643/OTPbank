@@ -156,37 +156,36 @@ class _NfcPaymentScreenState extends State<NfcPaymentScreen> {
                                   final card = cards[i];
                                   final isSelected = card.id == _selectedCardId;
 
-                                  return Material(
-                                    color: Colors.transparent,
-                                    borderRadius: BorderRadius.circular(32),
-                                    child: InkWell(
-                                      borderRadius: BorderRadius.circular(32),
-                                      onTap: () => Navigator.of(context).pop(card.id),
-                                      child: Stack(
-                                        children: [
-                                          OtpBankCard(
-                                            title: _titleFor(card),
-                                            amount: '${card.balance} ${card.currency}',
-                                            pan: _last4Pan(card),
-                                            variant: _variantFor(card),
-                                            customGradient: _customGradientFor(card),
-                                          ),
-                                          if (isSelected)
-                                            Positioned.fill(
-                                              child: Container(
-                                                decoration: BoxDecoration(
-                                                  borderRadius: BorderRadius.circular(32),
-                                                  border: Border.all(
-                                                    color: const Color(0xFFC4FF2E),
-                                                    width: 3,
-                                                  ),
-                                                ),
+                                  return ClipRRect(
+                                borderRadius: BorderRadius.circular(32),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(32),
+                                  onTap: () => Navigator.of(context).pop(card.id),
+                                  child: Stack(
+                                    children: [
+                                      OtpBankCard(
+                                        title: _titleFor(card),
+                                        amount: '${card.balance} ${card.currency}',
+                                        pan: _last4Pan(card),
+                                        variant: _variantFor(card),
+                                        customGradient: _customGradientFor(card),
+                                      ),
+                                      if (isSelected)
+                                        Positioned.fill(
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(32),
+                                              border: Border.all(
+                                                color: const Color(0xFFC4FF2E),
+                                                width: 3,
                                               ),
                                             ),
-                                        ],
-                                      ),
-                                    ),
-                                  );
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
+                              );
                                 },
                               ),
                             ),

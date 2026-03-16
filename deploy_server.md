@@ -94,20 +94,19 @@ Flexible означает:
 
 ```bash
 cd otpbank-fluuter
-flutter build web --release --dart-define=BASE_URL=/api
+flutter build web --release
 ```
 
-Если собираешь для локального теста по IP (не через nginx), используй:
-
-```bash
-flutter build web --release --dart-define=BASE_URL=http://144.31.86.235/api
-```
-
-Для локальной разработки можно переопределить на localhost:
+Для локальной разработки с бэкендом на localhost переопредели baseUrl:
 
 ```bash
 flutter run --dart-define=BASE_URL=http://localhost:3000
 ```
+
+> Важно: baseUrl теперь зависит от платформы:
+> - Web: относительный '/api'
+> - Desktop/Mobile: 'http://144.31.86.235/api'
+> Чтобы переопределить (например для локального запуска), используй --dart-define=BASE_URL.
 
 Затем содержимое `otpbank-fluuter/build/web/` нужно скопировать на сервер в папку репозитория:
 

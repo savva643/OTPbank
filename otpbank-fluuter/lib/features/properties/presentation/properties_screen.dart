@@ -357,9 +357,12 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          OtpPrimaryButton(
-            label: 'Добавить объект',
-            onPressed: onAdd,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: OtpPrimaryButton(
+              label: 'Добавить объект',
+              onPressed: onAdd,
+            ),
           ),
         ],
       ),
@@ -580,6 +583,14 @@ class _PropertyDetails extends StatelessWidget {
 
   const _PropertyDetails({required this.property});
 
+  void _openProperty(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => PropertyDetailsScreen(propertyId: property.id),
+      ),
+    );
+  }
+
   void _showAddAutopaymentSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -618,78 +629,123 @@ class _PropertyDetails extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
-            'Детали объекта',
-            style: TextStyle(
-              color: Color(0xFF0F172A),
-              fontSize: 16,
-              fontWeight: FontWeight.w700,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Детали объекта',
+                style: TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              TextButton(
+                onPressed: () => _openProperty(context),
+                child: const Text(
+                  'Подробнее',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           Container(
+            width: double.infinity,
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Row(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Нет автоплатежей',
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      'Нет автоплатежей',
+                      style: TextStyle(
+                        color: Color(0xFF64748B),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    TextButton.icon(
+                      onPressed: () => _showAddAutopaymentSheet(context),
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: const Text(
+                        'Добавить',
                         style: TextStyle(
-                          color: Color(0xFF64748B),
+                          color: Color(0xFFC4FF2E),
                           fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Добавьте автоплатежи для автоматической оплаты ЖКХ, интернета, охраны и других услуг',
-                        style: TextStyle(
-                          color: Color(0xFF64748B),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        backgroundColor: const Color(0xFFC4FF2E).withOpacity(0.15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
                         ),
                       ),
-                    ],
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Добавьте автоплатежи для автоматической оплаты ЖКХ, интернета, охраны и других услуг',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
-                if (property.cashbackPercent > 0)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFC1FF05).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Column(
-                      children: [
-                        const Text(
-                          'Кэшбэк',
-                          style: TextStyle(
-                            color: Color(0xFF64748B),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        Text(
-                          '${property.cashbackPercent.toStringAsFixed(1)}%',
-                          style: const TextStyle(
-                            color: Color(0xFF0F172A),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
               ],
             ),
           ),
+          const SizedBox(height: 16),
+          if (property.cashbackPercent > 0)
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: const Color(0xFFC1FF05).withOpacity(0.15),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFC1FF05),
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: const Text(
+                      'Кэшбэк',
+                      style: TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                  const Spacer(),
+                  Text(
+                    '${property.cashbackPercent.toStringAsFixed(1)}%',
+                    style: const TextStyle(
+                      color: Color(0xFF0F172A),
+                      fontSize: 20,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                ],
+              ),
+            ),
         ],
       ),
     );

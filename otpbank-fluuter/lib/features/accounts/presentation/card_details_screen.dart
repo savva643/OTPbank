@@ -52,9 +52,16 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
   bool? _notificationsEnabled;
   String? _cvc;
   bool _requisitesLoading = false;
+  String? _fullMaskedPan;
+  String? _validThru;
 
   static String _requisiteValue(String s) {
-    final v = s.replaceAll('*', '').trim();
+    final v = s.trim();
+    return v.isEmpty ? '—' : v;
+  }
+
+  static String _copyValue(String s) {
+    final v = s.trim();
     return v.isEmpty ? '—' : v;
   }
 
@@ -75,13 +82,21 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
 
     setState(() => _requisitesLoading = true);
     try {
-      final res = await _api.dio.get('/cards/${widget.args.cardId}/requisites');
-      final data = res.data;
+      // Fetch full card details to get validThru and CVC
+      final cardRes = await _api.dio.get('/cards/${widget.args.cardId}');
+      final cardData = cardRes.data;
+      final reqRes = await _api.dio.get('/cards/${widget.args.cardId}/requisites');
+      final reqData = reqRes.data;
       if (!mounted) return;
-      if (data is Map) {
-        final cvc = data['cvc']?.toString();
+      if (cardData is Map && reqData is Map) {
+        final cvc = reqData['cvc']?.toString();
+        final fullPan = reqData['fullPan']?.toString() ?? reqData['full_pan']?.toString();
+        final validThru = cardData['validThru']?.toString() ?? cardData['valid_thru']?.toString();
+        final masked = cardData['maskedCardNumber']?.toString() ?? cardData['masked_card_number']?.toString() ?? widget.args.pan;
         setState(() {
           _cvc = (cvc == null || cvc.trim().isEmpty) ? null : cvc.trim();
+          _fullMaskedPan = (fullPan == null || fullPan.trim().isEmpty) ? masked : fullPan.trim();
+          _validThru = (validThru == null || validThru.trim().isEmpty) ? null : validThru.trim();
           _showRequisitesBack = true;
         });
       } else {
@@ -844,8 +859,8 @@ class _CardDetailsScreenState extends State<CardDetailsScreen> {
                                 transform: Matrix4.identity()..rotateY(3.1415926535),
                                 alignment: Alignment.center,
                                 child: _CardRequisitesBack(
-                                  pan: args.pan,
-                                  validThru: args.validThru ?? '—',
+                                  pan: _fullMaskedPan ?? args.pan,
+                                  validThru: _validThru ?? args.validThru ?? '—',
                                   cvc: _cvc,
                                   variant: args.variant,
                                   copiedKeys: _copiedKeys,

@@ -158,18 +158,24 @@ class _OtpBankCardState extends State<OtpBankCard> {
                   const Spacer(),
                   Row(
                     children: [
-                      Text(
-                        widget.pan,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 14,
-                          fontFamily: 'monospace',
-                          fontWeight: FontWeight.w400,
-                          height: 1.43,
-                          letterSpacing: 1.40,
+                      Expanded(
+                        child: FittedBox(
+                          alignment: Alignment.centerLeft,
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            widget.pan,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontFamily: 'monospace',
+                              fontWeight: FontWeight.w400,
+                              height: 1.43,
+                              letterSpacing: 1.40,
+                            ),
+                          ),
                         ),
                       ),
-                      const Spacer(),
+                      const SizedBox(width: 12),
                       Image.asset(
                         'assets/img/Mir-logo.png',
                         width: 77,

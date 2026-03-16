@@ -100,7 +100,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
       if (cards.isEmpty) {
         print('[DEBUG] No cards found, adding placeholder');
         cards.add(_AccountCardItemData(
-          cardId: widget.args.cardId,
+          cardId: widget.args.cardId.isNotEmpty ? widget.args.cardId : 'placeholder-${widget.args.accountId}',
           title: widget.args.accountTitle,
           cardTypeName: '',
           balance: widget.args.balance,
@@ -121,7 +121,7 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
         // В случае ошибки показываем хотя бы одну карту из args
         _cards = [
           _AccountCardItemData(
-            cardId: widget.args.cardId,
+            cardId: widget.args.cardId.isNotEmpty ? widget.args.cardId : 'placeholder-${widget.args.accountId}',
             title: widget.args.accountTitle,
             cardTypeName: '',
             balance: widget.args.balance,
@@ -208,6 +208,9 @@ class _AccountDetailsScreenState extends State<AccountDetailsScreen> {
                         pan: card.pan,
                         variant: card.variant,
                         onTap: () {
+                          // Do not open details for placeholder cards
+                          if (card.cardId.startsWith('placeholder-')) return;
+
                           Navigator.of(context).push(
                             MaterialPageRoute<void>(
                               builder: (_) => CardDetailsScreen(

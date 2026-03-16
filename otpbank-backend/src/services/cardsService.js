@@ -1,6 +1,7 @@
 const { pool } = require('../db/pool');
 const { ApiError } = require('../utils/apiError');
 const bcrypt = require('bcryptjs');
+const { env } = require('../config/env');
 
 function generateMaskedPan() {
   const last4 = String(Math.floor(1000 + Math.random() * 9000));
@@ -9,6 +10,14 @@ function generateMaskedPan() {
 
 function generateCvc() {
   return String(Math.floor(100 + Math.random() * 900));
+}
+
+function generatePan() {
+  let pan = '';
+  for (let i = 0; i < 16; i++) {
+    pan += String(Math.floor(Math.random() * 10));
+  }
+  return pan;
 }
 
 function colorsForProductType(productType) {
@@ -74,6 +83,7 @@ const cardsService = {
     const isMain = existingCardsRes.rows[0].count === '0';
 
     const maskedPan = generateMaskedPan();
+    const pan = generatePan();
     const cvc = generateCvc();
     const colors = colorsForProductType(productType);
 
@@ -87,10 +97,10 @@ const cardsService = {
     })();
 
     const { rows } = await pool.query(
-      `INSERT INTO cards (account_id, user_id, product_type, card_type_name, label, masked_pan, cvc, status, bg_color1, bg_color2, is_main)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, $9, $10)
-       RETURNING id, account_id, product_type, card_type_name, label, masked_pan, bg_color1, bg_color2, status, is_main`,
-      [accountId, userId, productType, cardTypeName, label, maskedPan, cvc, colors.bg1, colors.bg2, isMain]
+      `INSERT INTO cards (account_id, user_id, product_type, card_type_name, label, masked_pan, pan, cvc, status, bg_color1, bg_color2, is_main)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10, $11)
+       RETURNING id, account_id, product_type, card_type_name, label, masked_pan, cvc, bg_color1, bg_color2, status, is_main`,
+      [accountId, userId, productType, cardTypeName, label, maskedPan, pan, cvc, colors.bg1, colors.bg2, isMain]
     );
 
     const c = rows[0];
@@ -110,7 +120,7 @@ const cardsService = {
 
   getRequisites: async (userId, cardId) => {
     const { rows } = await pool.query(
-      `SELECT c.id, c.cvc
+      `SELECT c.id, c.cvc, c.pan
        FROM cards c
        WHERE c.user_id = $1 AND c.id = $2
        LIMIT 1`,
@@ -120,10 +130,16 @@ const cardsService = {
     const r = rows[0];
     if (!r) throw new ApiError(404, 'not_found', 'Карта не найдена');
 
-    return {
+    const result = {
       id: r.id,
       cvc: r.cvc
     };
+
+    if (env.exposeFullPan) {
+      result.fullPan = r.pan;
+    }
+
+    return result;
   },
 
   getById: async (userId, cardId) => {

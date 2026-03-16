@@ -181,8 +181,16 @@ class _AvatarCircle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ImageProvider? avatar;
-    if (avatarUrl.startsWith('http://') || avatarUrl.startsWith('https://')) {
-      avatar = NetworkImage(avatarUrl);
+    final url = avatarUrl.trim();
+    if (url.isNotEmpty) {
+      if (url.startsWith('asset:')) {
+        final assetPath = url.substring('asset:'.length);
+        if (assetPath.isNotEmpty) {
+          avatar = AssetImage(assetPath);
+        }
+      } else if (url.startsWith('http://') || url.startsWith('https://')) {
+        avatar = NetworkImage(url);
+      }
     }
 
     return Container(

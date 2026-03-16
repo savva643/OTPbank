@@ -29,12 +29,13 @@ class AddAutopaymentSheetState extends State<AddAutopaymentSheet> {
   Widget build(BuildContext context) {
     final bottom = MediaQuery.of(context).viewInsets.bottom;
     
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
+    return SingleChildScrollView(
+      child: Padding(
+        padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + bottom),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
           const Text(
             'Добавить автоплатеж',
             style: TextStyle(
@@ -107,6 +108,7 @@ class AddAutopaymentSheetState extends State<AddAutopaymentSheet> {
             ),
           ),
         ],
+        ),
       ),
     );
   }

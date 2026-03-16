@@ -638,10 +638,15 @@ class _AccountCardBlock extends StatelessWidget {
                     accountTitle: mainCard.accountTitle,
                     balance: '${mainCard.balance} ${mainCard.currency}',
                     pan: () {
+
                       final digits = mainCard.maskedCardNumber.replaceAll(RegExp(r'[^0-9]'), '');
+
                       final last4 = digits.length >= 4 ? digits.substring(digits.length - 4) : digits;
+
                       return last4.isEmpty ? '****' : '**** $last4';
+
                     }(),
+
                     variant: (mainCard.productType == 'credit' || mainCard.productType == 'credit_card')
                         ? OtpBankCardVariant.purple
                         : (mainCard.productType == 'travel'
@@ -666,7 +671,20 @@ class _AccountCardBlock extends StatelessWidget {
         pan: '****',
         variant: OtpBankCardVariant.dark,
         onTap: () {
-          // TODO: Navigate to account details without card
+          Navigator.of(context).push(
+            MaterialPageRoute<void>(
+              builder: (_) => AccountDetailsScreen(
+                args: AccountDetailsArgs(
+                  accountId: account.id,
+                  cardId: '', // No card
+                  accountTitle: account.title,
+                  balance: '${account.balance} ${account.currency}',
+                  pan: '****',
+                  variant: OtpBankCardVariant.dark,
+                ),
+              ),
+            ),
+          );
         },
       ),
     );

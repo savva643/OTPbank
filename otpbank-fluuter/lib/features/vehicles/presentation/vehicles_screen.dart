@@ -289,9 +289,12 @@ class _EmptyState extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          OtpPrimaryButton(
-            label: 'Добавить авто',
-            onPressed: onAdd,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: OtpPrimaryButton(
+              label: 'Добавить авто',
+              onPressed: onAdd,
+            ),
           ),
         ],
       ),
@@ -489,6 +492,14 @@ class _VehicleDetails extends StatelessWidget {
 
   const _VehicleDetails({required this.vehicle});
 
+  void _openVehicle(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => VehicleDetailsScreen(vehicleId: vehicle.id),
+      ),
+    );
+  }
+
   void _showAddAutopaymentSheet(BuildContext context) {
     showModalBottomSheet<void>(
       context: context,
@@ -522,163 +533,85 @@ class _VehicleDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF8FAFC),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFE2E8F0)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Container(
-                width: 48,
-                height: 48,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFF7D32).withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(12),
+              const Text(
+                'Детали авто',
+                style: TextStyle(
+                  color: Color(0xFF0F172A),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
                 ),
-                child: const Icon(Icons.directions_car_filled, color: Color(0xFFFF7D32), size: 28),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      vehicle.displayName,
-                      style: const TextStyle(
-                        color: Color(0xFF0F172A),
-                        fontSize: 20,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    Text(
-                      'Год: ${vehicle.year}',
-                      style: const TextStyle(
-                        color: Color(0xFF64748B),
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
+              TextButton(
+                onPressed: () => _openVehicle(context),
+                child: const Text(
+                  'Подробнее',
+                  style: TextStyle(
+                    color: Color(0xFF0F172A),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: _DetailItem(
-                  icon: Icons.badge_outlined,
-                  label: 'Номер',
-                  value: vehicle.licensePlate,
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _DetailItem(
-                  icon: Icons.calendar_today_outlined,
-                  label: 'Год выпуска',
-                  value: '${vehicle.year}',
-                  valueColor: const Color(0xFFFF7D32),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: _DetailItem(
-                  icon: Icons.speed_outlined,
-                  label: 'Статус',
-                  value: 'Активен',
-                  valueColor: const Color(0xFF10B981),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _DetailItem(
-                  icon: Icons.local_gas_station_outlined,
-                  label: 'Топливо',
-                  value: 'Бензин',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          // Autopayments section
+          const SizedBox(height: 12),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
+              color: const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Icon(Icons.autorenew_outlined, color: Color(0xFF0F172A), size: 20),
-                    const SizedBox(width: 8),
                     const Text(
-                      'Автоплатежи',
+                      'Нет автоплатежей',
                       style: TextStyle(
-                        color: Color(0xFF0F172A),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
+                        color: Color(0xFF64748B),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const Spacer(),
                     TextButton.icon(
                       onPressed: () => _showAddAutopaymentSheet(context),
-                      icon: const Icon(Icons.add, size: 16),
-                      label: const Text('Добавить'),
+                      icon: const Icon(Icons.add_circle_outline, size: 18),
+                      label: const Text(
+                        'Добавить',
+                        style: TextStyle(
+                          color: Color(0xFFC4FF2E),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                       style: TextButton.styleFrom(
-                        foregroundColor: const Color(0xFFFF7D32),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        backgroundColor: const Color(0xFFC4FF2E).withOpacity(0.15),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8),
+                        ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 12),
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Нет автоплатежей',
-                        style: TextStyle(
-                          color: const Color(0xFF64748B),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Добавьте автоплатежи для автоматического списания средств на топливо, парковку, мойку и другие услуги',
-                        style: TextStyle(
-                          color: const Color(0xFF64748B),
-                          fontSize: 12,
-                          fontWeight: FontWeight.w400,
-                        ),
-                      ),
-                    ],
+                const SizedBox(height: 8),
+                Text(
+                  'Добавьте автоплатежи для автоматического списания средств на топливо, парковку, мойку и другие услуги',
+                  style: TextStyle(
+                    color: Color(0xFF64748B),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w400,
                   ),
                 ),
               ],
