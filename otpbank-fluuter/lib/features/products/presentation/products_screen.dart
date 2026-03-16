@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'dart:async';
 
 import '../../../core/theme/otp_colors.dart';
+import '../../../core/widgets/otp_icon.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/widgets/otp_offers_carousel.dart';
 import '../bloc/products_bloc.dart';
@@ -711,7 +712,7 @@ class _ProductsHeaderState extends State<_ProductsHeader> {
                 ),
                 _HeaderIconButton(
                   onTap: widget.onSearchTap,
-                  icon: Icons.search_rounded,
+                  icon: const OtpIcon(OtpIconAsset.magnifier, size: 22, color: Colors.white),
                 ),
               ],
             ),
@@ -767,7 +768,7 @@ class _HeaderIconButton extends StatefulWidget {
   const _HeaderIconButton({required this.onTap, required this.icon});
 
   final VoidCallback onTap;
-  final IconData icon;
+  final Widget icon;
 
   @override
   State<_HeaderIconButton> createState() => _HeaderIconButtonState();
@@ -786,7 +787,7 @@ class _HeaderIconButtonState extends State<_HeaderIconButton> {
           color: Colors.white.withOpacity(0.15),
           borderRadius: BorderRadius.circular(9999),
         ),
-        child: Icon(widget.icon, color: Colors.white),
+        child: Center(child: widget.icon),
       ),
     );
   }

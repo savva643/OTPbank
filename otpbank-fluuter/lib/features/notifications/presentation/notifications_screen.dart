@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/widgets/otp_icon.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
 
 class NotificationsScreen extends StatefulWidget {
@@ -116,6 +117,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     }
   }
 
+  Widget _leadingIconForType(String? type, Color color) {
+    switch (type) {
+      case 'bonus':
+        return OtpIcon(OtpIconAsset.star, size: 22, color: color);
+      default:
+        return Icon(_getIconForType(type), color: color);
+    }
+  }
+
   Color _getColorForType(String? type) {
     switch (type) {
       case 'payment':
@@ -208,7 +218,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                         color: const Color(0xFFFF6B6B),
                         borderRadius: BorderRadius.circular(16),
                       ),
-                      child: const Icon(Icons.delete, color: Colors.white),
+                      child: const OtpIcon(OtpIconAsset.trash, size: 22, color: Colors.white),
                     ),
                     onDismissed: (_) => _deleteNotification(notification['id']?.toString() ?? ''),
                     child: Container(
@@ -231,9 +241,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                             color: _getColorForType(type).withOpacity(0.1),
                             borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(
-                            _getIconForType(type),
-                            color: _getColorForType(type),
+                          child: Center(
+                            child: _leadingIconForType(type, _getColorForType(type)),
                           ),
                         ),
                         title: Row(

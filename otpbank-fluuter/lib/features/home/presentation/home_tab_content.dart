@@ -9,6 +9,7 @@ import '../../../core/widgets/otp_primary_button.dart';
 import '../../../core/widgets/otp_round_action_button.dart';
 import '../../../core/widgets/otp_story_tile.dart';
 import '../../../core/widgets/otp_webp_image.dart';
+import '../../../core/widgets/otp_icon.dart';
 import '../../../core/config/app_config.dart';
 import '../../accounts/presentation/account_details_screen.dart';
 import '../../bonuses/presentation/bonuses_screen.dart';
@@ -132,7 +133,7 @@ class _HomeTabContentState extends State<HomeTabContent> {
                     ),
                   );
                 },
-                icon: const Icon(Icons.search_rounded, size: 26),
+                icon: const OtpIcon(OtpIconAsset.magnifier, size: 26),
               ),
               Stack(
                 children: [
@@ -147,7 +148,7 @@ class _HomeTabContentState extends State<HomeTabContent> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.notifications_none_rounded, size: 26),
+                    icon: const OtpIcon(OtpIconAsset.bell, size: 26),
                   ),
                   // Badge для непрочитанных
                   Positioned(

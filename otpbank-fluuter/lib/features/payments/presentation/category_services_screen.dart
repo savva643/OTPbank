@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/widgets/otp_search_input.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
+import '../../../core/widgets/otp_icon.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/config/app_config.dart';
 
@@ -62,6 +63,23 @@ class _CategoryServicesScreenState extends State<CategoryServicesScreen> {
   List<PaymentService> _filteredServices = [];
   bool _isLoading = true;
   String? _error;
+
+  Widget _serviceIcon(PaymentService service, {double size = 24}) {
+    final icon = service.icon;
+    final color = service.iconColor ?? const Color(0xFF0F172A);
+
+    if (icon == Icons.wifi_rounded) {
+      return OtpIcon(OtpIconAsset.wifi, size: size, color: color);
+    }
+    if (icon == Icons.receipt_long_rounded) {
+      return OtpIcon(OtpIconAsset.noteWithPen, size: size, color: color);
+    }
+    if (icon == Icons.shopping_bag_rounded) {
+      return OtpIcon(OtpIconAsset.bag, size: size, color: color);
+    }
+
+    return Icon(icon ?? Icons.business_rounded, color: color, size: size);
+  }
 
   @override
   void initState() {
@@ -553,30 +571,10 @@ class _CategoryServicesScreenState extends State<CategoryServicesScreen> {
                         width: 48,
                         height: 48,
                         fit: BoxFit.contain,
-                        errorBuilder: (_, __, ___) => service.icon != null
-                            ? Icon(
-                                service.icon,
-                                color: service.iconColor ?? const Color(0xFF0F172A),
-                                size: 24,
-                              )
-                            : Icon(
-                                Icons.business_rounded,
-                                color: service.iconColor ?? const Color(0xFF0F172A),
-                                size: 24,
-                              ),
+                        errorBuilder: (_, __, ___) => _serviceIcon(service, size: 24),
                       ),
                     )
-                  : service.icon != null
-                      ? Icon(
-                          service.icon,
-                          color: service.iconColor ?? const Color(0xFF0F172A),
-                          size: 24,
-                        )
-                      : Icon(
-                          Icons.business_rounded,
-                          color: service.iconColor ?? const Color(0xFF0F172A),
-                          size: 24,
-                        ),
+                  : _serviceIcon(service, size: 24),
             ),
             const SizedBox(width: 16),
 
@@ -643,6 +641,23 @@ class _PaymentFormSheetState extends State<_PaymentFormSheet> {
   final _amountController = TextEditingController();
   final _accountController = TextEditingController();
 
+  Widget _serviceIcon({double size = 24}) {
+    final icon = widget.service.icon;
+    final color = widget.service.iconColor ?? const Color(0xFF0F172A);
+
+    if (icon == Icons.wifi_rounded) {
+      return OtpIcon(OtpIconAsset.wifi, size: size, color: color);
+    }
+    if (icon == Icons.receipt_long_rounded) {
+      return OtpIcon(OtpIconAsset.noteWithPen, size: size, color: color);
+    }
+    if (icon == Icons.shopping_bag_rounded) {
+      return OtpIcon(OtpIconAsset.bag, size: size, color: color);
+    }
+
+    return Icon(icon ?? Icons.business_rounded, color: color, size: size);
+  }
+
   @override
   void dispose() {
     _amountController.dispose();
@@ -701,30 +716,10 @@ class _PaymentFormSheetState extends State<_PaymentFormSheet> {
                             width: 48,
                             height: 48,
                             fit: BoxFit.contain,
-                            errorBuilder: (_, __, ___) => widget.service.icon != null
-                                ? Icon(
-                                    widget.service.icon,
-                                    color: widget.service.iconColor ?? const Color(0xFF0F172A),
-                                    size: 24,
-                                  )
-                                : Icon(
-                                    Icons.business_rounded,
-                                    color: widget.service.iconColor ?? const Color(0xFF0F172A),
-                                    size: 24,
-                                  ),
+                            errorBuilder: (_, __, ___) => _serviceIcon(size: 24),
                           ),
                         )
-                      : widget.service.icon != null
-                          ? Icon(
-                              widget.service.icon,
-                              color: widget.service.iconColor ?? const Color(0xFF0F172A),
-                              size: 24,
-                            )
-                          : Icon(
-                              Icons.business_rounded,
-                              color: widget.service.iconColor ?? const Color(0xFF0F172A),
-                              size: 24,
-                            ),
+                      : _serviceIcon(size: 24),
                 ),
                 const SizedBox(width: 16),
                 Expanded(

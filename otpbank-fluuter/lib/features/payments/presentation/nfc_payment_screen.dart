@@ -165,7 +165,7 @@ class _NfcPaymentScreenState extends State<NfcPaymentScreen> {
                                       child: Stack(
                                         children: [
                                           OtpBankCard(
-                                            title: card.accountTitle,
+                                            title: _titleFor(card),
                                             amount: '${card.balance} ${card.currency}',
                                             pan: _last4Pan(card),
                                             variant: _variantFor(card),
@@ -322,7 +322,7 @@ class _NfcPaymentScreenState extends State<NfcPaymentScreen> {
                           subtitle: selectedCard.accountTitle,
                           variant: _variantFor(selectedCard),
                           pan: selectedCard.maskedCardNumber,
-                          validThru: '—',
+                          validThru: selectedCard.validThru ?? '—',
                         ),
                       )
                     else

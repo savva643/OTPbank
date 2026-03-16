@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'dart:convert';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/greeting_cache_storage.dart';
@@ -38,6 +39,7 @@ class HomeCardItem extends Equatable {
     required this.maskedCardNumber,
     required this.productType,
     required this.label,
+    required this.validThru,
     required this.bgColor1,
     required this.bgColor2,
     required this.status,
@@ -52,6 +54,7 @@ class HomeCardItem extends Equatable {
   final String maskedCardNumber;
   final String productType;
   final String? label;
+  final String? validThru;
   final String? bgColor1;
   final String? bgColor2;
   final String status;
@@ -67,11 +70,73 @@ class HomeCardItem extends Equatable {
         maskedCardNumber,
         productType,
         label,
+        validThru,
         bgColor1,
         bgColor2,
         status,
         isMain,
       ];
+}
+
+String? _repairMojibake(String? input) {
+  final s = (input ?? '').trim();
+  if (s.isEmpty) return null;
+
+  // If backend already replaced unknown chars with '?', we can't restore them.
+  // In that case return null so UI can fallback to a safer title.
+  if (RegExp(r'\?{3,}').hasMatch(s)) return null;
+  if (s.replaceAll('?', '').trim().isEmpty) return null;
+
+  // Typical mojibake for Cyrillic looks like: "ÐÐ»ÑÑÐ°".
+  // Try interpreting string bytes as latin1 and decoding as utf8.
+  try {
+    final bytes = latin1.encode(s);
+    final decoded = utf8.decode(bytes, allowMalformed: true).trim();
+    if (decoded.isNotEmpty && decoded != s) {
+      // Heuristic: accept only if it contains Cyrillic or looks more "readable".
+      final hasCyr = RegExp(r'[\u0400-\u04FF]').hasMatch(decoded);
+      if (hasCyr) return decoded;
+    }
+  } catch (_) {
+    // ignore
+  }
+
+  // If it contains replacement char, prefer fallback.
+  if (s.contains('�')) return null;
+  return s;
+}
+
+String? _normalizeValidThru(dynamic raw) {
+  final s = (raw ?? '').toString().trim();
+  if (s.isEmpty) return null;
+
+  // Already MM/YY
+  final mmYy = RegExp(r'^(0[1-9]|1[0-2])\s*/\s*(\d{2})$');
+  final m1 = mmYy.firstMatch(s);
+  if (m1 != null) {
+    final mm = m1.group(1)!;
+    final yy = m1.group(2)!;
+    return '$mm/$yy';
+  }
+
+  // Digits like 1227
+  final digits = s.replaceAll(RegExp(r'\D'), '');
+  if (digits.length == 4) {
+    final mm = digits.substring(0, 2);
+    final yy = digits.substring(2, 4);
+    final mmInt = int.tryParse(mm);
+    if (mmInt != null && mmInt >= 1 && mmInt <= 12) return '$mm/$yy';
+  }
+
+  // ISO date-like: 2027-12-01
+  final iso = RegExp(r'^(\d{4})-(\d{2})-(\d{2})$').firstMatch(s);
+  if (iso != null) {
+    final year = iso.group(1)!;
+    final month = iso.group(2)!;
+    return '$month/${year.substring(2)}';
+  }
+
+  return null;
 }
 
 class HomeStoryItem extends Equatable {
@@ -155,15 +220,36 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           if (c is! Map) continue;
           final id = c['id']?.toString();
           final accountId = c['accountId']?.toString();
-          final accountTitle = c['accountTitle']?.toString();
+          final rawAccountTitle = c['accountTitle']?.toString();
           final balance = c['balance']?.toString();
           final currency = c['currency']?.toString();
           final masked = c['maskedCardNumber']?.toString();
           final productType = c['productType']?.toString();
           final status = c['status']?.toString();
-          if (id == null || accountId == null || accountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
+          if (id == null || accountId == null || rawAccountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
             continue;
           }
+
+          final repairedAccountTitle = _repairMojibake(rawAccountTitle);
+          final accountTitle = repairedAccountTitle ?? (rawAccountTitle.contains('?') ? 'Карта' : rawAccountTitle);
+
+          final rawLabel = c['label']?.toString();
+          final label = _repairMojibake(rawLabel);
+
+          final validThru = _normalizeValidThru(
+            c['validThru'] ??
+                c['valid_thru'] ??
+                c['expiry'] ??
+                c['expiryDate'] ??
+                c['expiry_date'] ??
+                c['expirationDate'] ??
+                c['expiration_date'] ??
+                c['expDate'] ??
+                c['exp_date'] ??
+                c['validUntil'] ??
+                c['valid_until'],
+          );
+
           cards.add(
             HomeCardItem(
               id: id,
@@ -173,7 +259,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               currency: currency,
               maskedCardNumber: masked,
               productType: productType,
-              label: c['label']?.toString(),
+              label: label,
+              validThru: validThru,
               bgColor1: c['bgColor1']?.toString(),
               bgColor2: c['bgColor2']?.toString(),
               status: status,
@@ -287,15 +374,36 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           if (c is! Map) continue;
           final id = c['id']?.toString();
           final accountId = c['accountId']?.toString();
-          final accountTitle = c['accountTitle']?.toString();
+          final rawAccountTitle = c['accountTitle']?.toString();
           final balance = c['balance']?.toString();
           final currency = c['currency']?.toString();
           final masked = c['maskedCardNumber']?.toString();
           final productType = c['productType']?.toString();
           final status = c['status']?.toString();
-          if (id == null || accountId == null || accountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
+          if (id == null || accountId == null || rawAccountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
             continue;
           }
+
+          final repairedAccountTitle = _repairMojibake(rawAccountTitle);
+          final accountTitle = repairedAccountTitle ?? (rawAccountTitle.contains('?') ? 'Карта' : rawAccountTitle);
+
+          final rawLabel = c['label']?.toString();
+          final label = _repairMojibake(rawLabel);
+
+          final validThru = _normalizeValidThru(
+            c['validThru'] ??
+                c['valid_thru'] ??
+                c['expiry'] ??
+                c['expiryDate'] ??
+                c['expiry_date'] ??
+                c['expirationDate'] ??
+                c['expiration_date'] ??
+                c['expDate'] ??
+                c['exp_date'] ??
+                c['validUntil'] ??
+                c['valid_until'],
+          );
+
           cards.add(
             HomeCardItem(
               id: id,
@@ -305,7 +413,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               currency: currency,
               maskedCardNumber: masked,
               productType: productType,
-              label: c['label']?.toString(),
+              label: label,
+              validThru: validThru,
               bgColor1: c['bgColor1']?.toString(),
               bgColor2: c['bgColor2']?.toString(),
               status: status,
@@ -420,15 +529,36 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
           if (c is! Map) continue;
           final id = c['id']?.toString();
           final accountId = c['accountId']?.toString();
-          final accountTitle = c['accountTitle']?.toString();
+          final rawAccountTitle = c['accountTitle']?.toString();
           final balance = c['balance']?.toString();
           final currency = c['currency']?.toString();
           final masked = c['maskedCardNumber']?.toString();
           final productType = c['productType']?.toString();
           final status = c['status']?.toString();
-          if (id == null || accountId == null || accountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
+          if (id == null || accountId == null || rawAccountTitle == null || balance == null || currency == null || masked == null || productType == null || status == null) {
             continue;
           }
+
+          final repairedAccountTitle = _repairMojibake(rawAccountTitle);
+          final accountTitle = repairedAccountTitle ?? (rawAccountTitle.contains('?') ? 'Карта' : rawAccountTitle);
+
+          final rawLabel = c['label']?.toString();
+          final label = _repairMojibake(rawLabel);
+
+          final validThru = _normalizeValidThru(
+            c['validThru'] ??
+                c['valid_thru'] ??
+                c['expiry'] ??
+                c['expiryDate'] ??
+                c['expiry_date'] ??
+                c['expirationDate'] ??
+                c['expiration_date'] ??
+                c['expDate'] ??
+                c['exp_date'] ??
+                c['validUntil'] ??
+                c['valid_until'],
+          );
+
           cards.add(
             HomeCardItem(
               id: id,
@@ -438,7 +568,8 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
               currency: currency,
               maskedCardNumber: masked,
               productType: productType,
-              label: c['label']?.toString(),
+              label: label,
+              validThru: validThru,
               bgColor1: c['bgColor1']?.toString(),
               bgColor2: c['bgColor2']?.toString(),
               status: status,

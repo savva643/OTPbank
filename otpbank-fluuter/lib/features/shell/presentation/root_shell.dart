@@ -6,6 +6,7 @@ import '../../home/presentation/home_screen.dart';
 import '../../payments/presentation/payments_screen.dart';
 import '../../products/presentation/products_screen.dart';
 import '../../../core/theme/otp_colors.dart';
+import '../../../core/widgets/otp_icon.dart';
 
 class RootShell extends StatefulWidget {
   const RootShell({super.key});
@@ -54,8 +55,8 @@ class RootShellState extends State<RootShell> {
           ),
           BottomNavigationBarItem(icon: Icon(Icons.payments_rounded), label: 'Платежи'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long_rounded), label: 'История'),
-          BottomNavigationBarItem(icon: Icon(Icons.chat_bubble_rounded), label: 'Чат'),
-          BottomNavigationBarItem(icon: Icon(Icons.grid_view_rounded), label: 'Продукты'),
+          BottomNavigationBarItem(icon: OtpIcon(OtpIconAsset.message), label: 'Чат'),
+          BottomNavigationBarItem(icon: OtpIcon(OtpIconAsset.bag), label: 'Продукты'),
         ],
       ),
     );

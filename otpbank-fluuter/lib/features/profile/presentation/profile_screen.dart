@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/auth_token_storage.dart';
+import '../../../core/widgets/otp_icon.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
 import '../../splash/presentation/splash_screen.dart';
@@ -131,8 +132,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     onTap: () => Navigator.of(context).push(
                       MaterialPageRoute(builder: (_) => const SettingsScreen()),
                     ),
-                    child: const Icon(
-                      Icons.settings_outlined,
+                    child: const OtpIcon(
+                      OtpIconAsset.settings,
+                      size: 22,
                       color: Color(0xFF64748B),
                     ),
                   ),

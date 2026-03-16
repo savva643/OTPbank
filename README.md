@@ -1,11 +1,17 @@
 # OTPbank
 
+![Flutter](https://img.shields.io/badge/Flutter-Dart-1FBCFD?logo=flutter&logoColor=white)
+![Node.js](https://img.shields.io/badge/Node.js-20-339933?logo=nodedotjs&logoColor=white)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)
+![BLoC](https://img.shields.io/badge/flutter__bloc-state%20management-4E7BFF)
+
 Проект для **Challenge Cup IT 2026** (кейс от **OTP Bank**).
 
 `OTPbank` — прототип мобильного банковского приложения:
 - авторизация по номеру телефона и SMS-коду (OTP)
 - онбординг/регистрация профиля
-- главная с виджетами
+- главная (счета/карты/виджеты)
 - продукты и сценарии
 - переводы/платежи
 - история операций
@@ -14,6 +20,11 @@
 - чат
 
 Backend является **mock/демо-сервером** (Node.js + Postgres), который поддерживает экраны Flutter-приложения.
+
+## Репозитории / папки
+
+- **Flutter**: `otpbank-fluuter/`
+- **Backend**: `otpbank-backend/`
 
 ## Демо-сценарий (что показать на защите)
 
@@ -30,47 +41,98 @@ Backend является **mock/демо-сервером** (Node.js + Postgres)
 ## Стек
 
 ### Mobile
+
 - Flutter (Dart)
-- `flutter_bloc` (состояние)
-- `dio` (HTTP)
-- `shared_preferences` (JWT в storage)
-- `image_picker` (выбор аватара из галереи)
+- `flutter_bloc`
+- `dio`
+- `shared_preferences`
+- `image_picker`
 
 ### Backend
+
 - Node.js + Express
 - PostgreSQL
 - JWT
 - SMSAero (отправка SMS для OTP, опционально)
 
-## Архитектура (кратко)
+## Порты
 
-- **Backend**: `routes -> controllers -> services -> db(pool)`
-- **Flutter**:
-  - `core/` — конфиг, сеть, storage, общие виджеты
-  - `features/*` — экраны по доменам (auth, splash, shell, goals, products, ...)
-  - `AuthBloc` управляет полным auth-flow (phone → code → registration → authorized)
+- **Backend API**: `3000`
+- **Postgres**: `5432`
+
+## Переменные окружения
+
+В репозитории есть шаблоны:
+
+- **root**: `.env.example`
+- **backend**: `otpbank-backend/.env.example`
+
+Для локальной разработки:
+
+- скопируй `otpbank-backend/.env.example` → `otpbank-backend/.env`
+- измени значения при необходимости
+
+Ключевые переменные:
+
+- `PORT` (по умолчанию `3000`)
+- `DATABASE_URL` (строка подключения к Postgres)
+- `JWT_SECRET` (**обязательно поменять в проде**)
+
+Для OTP по SMSAero (необязательно):
+
+- `SMSAERO_EMAIL`
+- `SMSAERO_API_KEY`
+- `SMSAERO_SIGN`
+- `SMSAERO_TEST_MODE`
 
 ## Быстрый старт (Docker)
 
 Требования:
+
 - Docker Desktop
 
 Запуск:
+
 ```bash
 docker compose up --build
 ```
 
 Проверка:
+
 - Backend healthcheck: `http://localhost:3000/health`
+
+## Запуск backend без Docker (локально)
+
+Требования:
+
+- Node.js 20+
+- PostgreSQL 16+
+
+Шаги:
+
+```bash
+# 1) backend env
+cp otpbank-backend/.env.example otpbank-backend/.env
+
+# 2) install
+cd otpbank-backend
+npm i
+
+# 3) run
+npm run dev
+```
 
 ## Запуск Flutter
 
 Требования:
+
 - Flutter SDK
 - Android Studio/SDK или устройство
 
 Команды:
+
 ```bash
+cd otpbank-fluuter
 flutter pub get
 flutter run
 ```
@@ -80,25 +142,15 @@ flutter run
 ## Аватары (ассеты)
 
 В приложении есть выбор аватара:
+
 - из набора `assets/avatars/avatar1.png..avatar4.png`
 - из галереи (локально на устройстве)
 
-Положи картинки сюда:
+Папка:
+
 - `otpbank-fluuter/assets/avatars/`
 
-## Документация API
+## Документация
 
-Смотри `API.md`.
-
-## Переменные окружения
-
-В Docker Compose используется дефолтный набор переменных для разработки. Перед продом нужно заменить:
-
-- `JWT_SECRET`
-- креды к БД
-
-Для OTP по SMSAero (необязательно):
-- `SMSAERO_EMAIL`
-- `SMSAERO_API_KEY`
-- `SMSAERO_SIGN` (опционально)
-- `SMSAERO_TEST_MODE` (опционально)
+- API: `API.md`
+- Деплой/сервер: `deploy_server.md`

@@ -5,6 +5,7 @@ class OtpSquareActionButton extends StatelessWidget {
     super.key,
     required this.label,
     required this.icon,
+    this.iconWidget,
     this.primary = false,
     this.onTap,
     this.disabled = false,
@@ -12,6 +13,7 @@ class OtpSquareActionButton extends StatelessWidget {
 
   final String label;
   final IconData icon;
+  final Widget? iconWidget;
   final bool primary;
   final VoidCallback? onTap;
   final bool disabled;
@@ -45,7 +47,9 @@ class OtpSquareActionButton extends StatelessWidget {
                     borderRadius: BorderRadius.circular(16),
                   ),
                 ),
-                child: Icon(icon, color: const Color(0xFF0F172A), size: 22),
+                child: Center(
+                  child: iconWidget ?? Icon(icon, color: const Color(0xFF0F172A), size: 22),
+                ),
               ),
             ),
           ),

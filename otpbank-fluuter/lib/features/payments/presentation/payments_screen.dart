@@ -8,6 +8,7 @@ import 'payments_search_screen.dart';
 import 'qr_payment_screen.dart';
 import '../../../core/widgets/otp_search_input.dart';
 import '../../../core/widgets/otp_square_action_button.dart';
+import '../../../core/widgets/otp_icon.dart';
 import 'sbp_transfer_screen.dart';
 
 class PaymentsScreen extends StatefulWidget {
@@ -245,6 +246,7 @@ class _QuickTransferMethodsRow extends StatelessWidget {
           child: OtpSquareActionButton(
             label: 'По номеру\nдоговора',
             icon: Icons.description_rounded,
+            iconWidget: const OtpIcon(OtpIconAsset.noteWithPen, size: 22, color: Color(0xFF0F172A)),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(
@@ -287,6 +289,7 @@ class _QuickTransferMethodsRow extends StatelessWidget {
           child: OtpSquareActionButton(
             label: 'Оплата\nпо QR',
             icon: Icons.qr_code_rounded,
+            iconWidget: const OtpIcon(OtpIconAsset.scannerQr, size: 22, color: Color(0xFF0F172A)),
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(

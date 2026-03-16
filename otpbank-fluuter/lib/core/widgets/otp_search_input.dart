@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import 'otp_icon.dart';
+
 class OtpSearchInput extends StatefulWidget {
   const OtpSearchInput({
     super.key,
@@ -62,11 +64,15 @@ class _OtpSearchInputState extends State<OtpSearchInput> {
           fontSize: 14,
           fontWeight: FontWeight.w400,
         ),
-        prefixIcon: const Icon(
-          Icons.search_rounded,
-          size: 18,
-          color: Color(0xFF6B7280),
+        prefixIcon: const Padding(
+          padding: EdgeInsets.only(left: 14, right: 10),
+          child: OtpIcon(
+            OtpIconAsset.magnifier,
+            size: 18,
+            color: Color(0xFF6B7280),
+          ),
         ),
+        prefixIconConstraints: const BoxConstraints(minWidth: 0, minHeight: 0),
         filled: true,
         fillColor: const Color(0xFFF1F5F9),
         border: OutlineInputBorder(
