@@ -3,6 +3,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/auth_token_storage.dart';
+import '../../../core/storage/pin_code_storage.dart';
 
 part 'auth_event.dart';
 part 'auth_state.dart';
@@ -108,6 +109,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   Future<void> _onLoggedOut(AuthLoggedOut event, Emitter<AuthState> emit) async {
     await _tokenStorage.clear();
+    await PinCodeStorage().clear();
     emit(const AuthState(status: AuthStatus.unauthorized));
   }
 }

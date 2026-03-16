@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/storage/auth_token_storage.dart';
+import '../../../core/storage/pin_code_storage.dart';
 import '../../../core/widgets/otp_icon.dart';
 import '../../../core/widgets/otp_universal_app_bar.dart';
 import '../../auth/bloc/auth_bloc.dart';
@@ -95,6 +96,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   Future<void> _logout() async {
     await AuthTokenStorage().clear();
+    await PinCodeStorage().clear();
     if (mounted) {
       context.read<AuthBloc>().add(const AuthLoggedOut());
       Navigator.of(context).pushAndRemoveUntil(
