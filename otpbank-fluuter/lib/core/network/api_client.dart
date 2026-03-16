@@ -52,6 +52,22 @@ class ApiClient {
           print('[dio] url: ${e.requestOptions.baseUrl}${e.requestOptions.path}');
           // ignore: avoid_print
           print('[dio] response: ${e.response?.statusCode} ${e.response?.data}');
+
+          final statusCode = e.response?.statusCode;
+          if (statusCode == 401) {
+            _tokenStorage.clear();
+          }
+
+          if (statusCode == 404 && e.requestOptions.path == '/user/profile') {
+            final data = e.response?.data;
+            if (data is Map && data['error'] is Map) {
+              final err = data['error'] as Map;
+              final code = err['code']?.toString();
+              if (code == 'not_found') {
+                _tokenStorage.clear();
+              }
+            }
+          }
           handler.next(e);
         },
       ),

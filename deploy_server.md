@@ -94,10 +94,10 @@ Flexible означает:
 
 ```bash
 cd otpbank-fluuter
-flutter build web --release --dart-define=BASE_URL=http://otpbank.keep-pixel.ru/api
+flutter build web --release --dart-define=BASE_URL=/api
 ```
 
-Если собираешь без домена (только по IP), используй:
+Если собираешь для локального теста по IP (не через nginx), используй:
 
 ```bash
 flutter build web --release --dart-define=BASE_URL=http://144.31.86.235/api

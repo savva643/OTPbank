@@ -482,7 +482,13 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       final profileRes = await _apiClient.dio.get('/user/profile');
       final cardsRes = await _apiClient.dio.get('/cards');
       final accountsRes = await _apiClient.dio.get('/accounts');
-      final storiesRes = await _apiClient.dio.get('/stories');
+      dynamic storiesData;
+      try {
+        final storiesRes = await _apiClient.dio.get('/stories/');
+        storiesData = storiesRes.data;
+      } catch (e) {
+        print('Error loading stories: $e');
+      }
 
       final data = profileRes.data;
 
@@ -609,7 +615,6 @@ class HomeBloc extends Bloc<HomeEvent, HomeState> {
       }
 
       final stories = <HomeStoryItem>[];
-      final storiesData = storiesRes.data;
       if (storiesData is Map && storiesData['items'] is List) {
         for (final s in (storiesData['items'] as List)) {
           if (s is! Map) continue;
