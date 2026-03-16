@@ -18,10 +18,13 @@ function createApp() {
   app.use(express.json({ limit: '1mb' }));
 
   app.use('/static', express.static(path.join(__dirname, '..', 'public')));
+  app.use('/api/static', express.static(path.join(__dirname, '..', 'public')));
 
   app.use('/logos', express.static(path.join(__dirname, '..', 'public', 'logos')));
+  app.use('/api/logos', express.static(path.join(__dirname, '..', 'public', 'logos')));
 
   app.use('/stories', express.static(path.join(__dirname, '..', 'public', 'stories')));
+  app.use('/api/stories', express.static(path.join(__dirname, '..', 'public', 'stories')));
 
   app.use(router);
 
