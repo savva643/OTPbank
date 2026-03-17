@@ -39,8 +39,10 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     emit(state.copyWith(status: AuthStatus.loading, phone: event.phone));
 
     try {
-      await _apiClient.dio.post('/auth/otp/request', data: {"phone": event.phone});
-      emit(state.copyWith(status: AuthStatus.codeRequested));
+      final res = await _apiClient.dio.post('/auth/otp/request', data: {"phone": event.phone});
+      final data = res.data;
+      final code = data is Map ? data['code']?.toString() : null;
+      emit(state.copyWith(status: AuthStatus.codeRequested, otpCode: code));
     } catch (e) {
       emit(state.copyWith(status: AuthStatus.failure));
     }

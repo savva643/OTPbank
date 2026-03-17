@@ -17,6 +17,7 @@ class VerifyCodeScreen extends StatefulWidget {
 
 class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
   final _codeCtrl = TextEditingController();
+  String? _lastShownCode;
 
   PageRoute<void> _fadeSlideRoute(Widget child) {
     return PageRouteBuilder<void>(
@@ -46,6 +47,20 @@ class _VerifyCodeScreenState extends State<VerifyCodeScreen> {
     return BlocListener<AuthBloc, AuthState>(
       listenWhen: (prev, next) => prev.status != next.status,
       listener: (context, state) {
+        final code = state.otpCode;
+        if (code != null && code.isNotEmpty && _lastShownCode != code) {
+          _lastShownCode = code;
+          ScaffoldMessenger.of(context).hideCurrentSnackBar();
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Демо-код: $code'),
+              behavior: SnackBarBehavior.floating,
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              duration: const Duration(seconds: 4),
+            ),
+          );
+        }
+
         if (state.status == AuthStatus.needsRegistration) {
           Navigator.of(context).pushReplacement(_fadeSlideRoute(const RegistrationScreen()));
         }

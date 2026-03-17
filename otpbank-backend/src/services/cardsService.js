@@ -3,6 +3,20 @@ const { ApiError } = require('../utils/apiError');
 const bcrypt = require('bcryptjs');
 const { env } = require('../config/env');
 
+let _hasPanColumnCache;
+
+async function hasPanColumn() {
+  if (_hasPanColumnCache !== undefined) return _hasPanColumnCache;
+  const { rows } = await pool.query(
+    `SELECT 1
+     FROM information_schema.columns
+     WHERE table_schema = 'public' AND table_name = 'cards' AND column_name = 'pan'
+     LIMIT 1`
+  );
+  _hasPanColumnCache = rows.length > 0;
+  return _hasPanColumnCache;
+}
+
 function generateMaskedPan() {
   const last4 = String(Math.floor(1000 + Math.random() * 9000));
   return `**** **** **** ${last4}`;
@@ -96,12 +110,19 @@ const cardsService = {
       return 'Карта МИР';
     })();
 
-    const { rows } = await pool.query(
-      `INSERT INTO cards (account_id, user_id, product_type, card_type_name, label, masked_pan, pan, cvc, status, bg_color1, bg_color2, is_main)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10, $11)
-       RETURNING id, account_id, product_type, card_type_name, label, masked_pan, cvc, bg_color1, bg_color2, status, is_main`,
-      [accountId, userId, productType, cardTypeName, label, maskedPan, pan, cvc, colors.bg1, colors.bg2, isMain]
-    );
+    const canStorePan = await hasPanColumn();
+    const insertSql = canStorePan
+      ? `INSERT INTO cards (account_id, user_id, product_type, card_type_name, label, masked_pan, pan, cvc, status, bg_color1, bg_color2, is_main)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'active', $9, $10, $11)
+         RETURNING id, account_id, product_type, card_type_name, label, masked_pan, cvc, bg_color1, bg_color2, status, is_main`
+      : `INSERT INTO cards (account_id, user_id, product_type, card_type_name, label, masked_pan, cvc, status, bg_color1, bg_color2, is_main)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, 'active', $8, $9, $10)
+         RETURNING id, account_id, product_type, card_type_name, label, masked_pan, cvc, bg_color1, bg_color2, status, is_main`;
+    const insertParams = canStorePan
+      ? [accountId, userId, productType, cardTypeName, label, maskedPan, pan, cvc, colors.bg1, colors.bg2, isMain]
+      : [accountId, userId, productType, cardTypeName, label, maskedPan, cvc, colors.bg1, colors.bg2, isMain];
+
+    const { rows } = await pool.query(insertSql, insertParams);
 
     const c = rows[0];
     return {
@@ -119,11 +140,17 @@ const cardsService = {
   },
 
   getRequisites: async (userId, cardId) => {
+    const canReadPan = await hasPanColumn();
     const { rows } = await pool.query(
-      `SELECT c.id, c.cvc, c.pan
-       FROM cards c
-       WHERE c.user_id = $1 AND c.id = $2
-       LIMIT 1`,
+      canReadPan
+        ? `SELECT c.id, c.cvc, c.pan
+           FROM cards c
+           WHERE c.user_id = $1 AND c.id = $2
+           LIMIT 1`
+        : `SELECT c.id, c.cvc
+           FROM cards c
+           WHERE c.user_id = $1 AND c.id = $2
+           LIMIT 1`,
       [userId, cardId]
     );
 
@@ -135,7 +162,7 @@ const cardsService = {
       cvc: r.cvc
     };
 
-    if (env.exposeFullPan) {
+    if (env.exposeFullPan && canReadPan) {
       result.fullPan = r.pan;
     }
 

@@ -123,7 +123,8 @@ const otpAuthService = {
 
     return {
       ok: true,
-      expiresInSec: ttlSeconds
+      expiresInSec: ttlSeconds,
+      code
     };
   },
 
